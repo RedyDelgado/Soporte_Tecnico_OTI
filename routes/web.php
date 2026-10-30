@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\DirectorioController;
 use App\Http\Controllers\PanelController;
+use App\Http\Controllers\PedidoPublicoController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PushController;
 use App\Http\Controllers\ReporteController;
@@ -13,9 +14,12 @@ use Illuminate\Support\Facades\Route;
 
 // Públicas
 Route::get('/t/{token}', [TicketController::class, 'seguimiento'])->name('seguimiento');
+Route::get('/pedido', [PedidoPublicoController::class, 'create'])->name('pedido.publico');
+Route::post('/pedido', [PedidoPublicoController::class, 'store'])->middleware('throttle:5,60');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'form'])->name('login');
+    Route::get('/login/clave', [AuthController::class, 'clave'])->name('login.clave');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
     Route::get('/auth/google', [AuthController::class, 'google'])->name('google');
     Route::get('/auth/google/callback', [AuthController::class, 'googleCallback']);
@@ -52,6 +56,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/tickets/nuevo', [TicketController::class, 'create'])->name('tickets.create');
         Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
         Route::post('/tickets/{ticket}/asignar', [TicketController::class, 'asignar'])->name('tickets.asignar');
+        Route::post('/tickets/{ticket}/validar', [TicketController::class, 'validar'])->name('tickets.validar');
+        Route::post('/tickets/{ticket}/rechazar', [TicketController::class, 'rechazar'])->name('tickets.rechazar');
         Route::post('/tickets/{ticket}/apoyos', [TicketController::class, 'apoyos'])->name('tickets.apoyos');
         Route::post('/tickets/{ticket}/clasificar', [TicketController::class, 'clasificar'])->name('tickets.clasificar');
         Route::post('/tickets/{ticket}/reabrir', [TicketController::class, 'reabrir'])->name('tickets.reabrir');

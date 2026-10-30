@@ -8,6 +8,18 @@
             <img src="/icono.svg" class="size-8" alt="">
             <span class="font-semibold">Oficina de Tecnologías de la Información</span>
         </div>
+        @if (session('registrado'))
+            <div class="card mb-4 border-ok-200 p-4" x-data="{ copiado: false }">
+                <div class="mb-1 flex items-center gap-2 font-semibold text-ok-700"><i class="ti ti-circle-check"></i>Pedido registrado</div>
+                <p class="mb-3 text-sm">Guarda este enlace (o toma una captura): con él verás el avance de tu pedido <b>{{ $ticket->codigo }}</b>.</p>
+                <div class="flex gap-2">
+                    <input readonly value="{{ route('seguimiento', $ticket->token) }}" class="input !text-xs" aria-label="Enlace de seguimiento">
+                    <button type="button" class="btn !px-2.5" @click="navigator.clipboard.writeText('{{ route('seguimiento', $ticket->token) }}'); copiado = true" aria-label="Copiar enlace">
+                        <i class="ti" :class="copiado ? 'ti-check text-ok-600' : 'ti-copy'"></i>
+                    </button>
+                </div>
+            </div>
+        @endif
         <div class="card p-4">
             <p class="text-sm muted">Su pedido</p>
             <h1 class="font-mono text-2xl">{{ $ticket->codigo }}</h1>
@@ -16,6 +28,7 @@
 
             <x-mensaje-pedido :ticket="$ticket" class="mt-4" />
 
+            @if (in_array($ticket->estado, \App\Models\Ticket::ABIERTOS) || $ticket->estado === 'resuelto')
             <ol class="mt-4 space-y-0">
                 @foreach (array_values($pasos) as $i => $paso)
                     <li class="flex gap-3">
@@ -34,6 +47,7 @@
                     </li>
                 @endforeach
             </ol>
+            @endif
 
             @if ($ticket->estado === 'resuelto')
                 <div class="mt-4 rounded-xl bg-ok-50 p-4 text-sm">

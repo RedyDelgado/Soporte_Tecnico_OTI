@@ -124,7 +124,26 @@
         </div>
 
         <aside class="space-y-4">
-            @if ($u->puedeAsignar() && $t->estado !== 'resuelto')
+            @if ($t->estado === 'por_validar' && $u->puedeAsignar())
+                <div class="card border-warn-200 p-4">
+                    <div class="mb-1 flex items-center gap-2"><i class="ti ti-user-question text-warn-500"></i><span class="card-title">Pedido sin correo UNIQ</span></div>
+                    <p class="mb-3 text-sm muted">Llegó por el formulario público. Verifica que la persona sea de la UNIQ (por ejemplo, llamando a su celular) antes de aprobarlo.</p>
+                    <div class="flex gap-2">
+                        <form method="POST" action="{{ route('tickets.validar', $t) }}" class="flex-1" data-confirmar="¿Validar el pedido {{ $t->codigo }}? Pasará a la cola por asignar." data-confirmar-boton="Validar">
+                            @csrf
+                            <button class="btn w-full !border-ok-600 !bg-ok-600 !text-white hover:!bg-ok-700"><i class="ti ti-check"></i>Validar</button>
+                        </form>
+                        <button type="button" class="btn flex-1" onclick="rechazarPedido('{{ route('tickets.rechazar', $t) }}', '{{ $t->codigo }}')"><i class="ti ti-x"></i>Rechazar</button>
+                    </div>
+                </div>
+            @endif
+            @if ($t->estado === 'rechazado')
+                <div class="card border-danger-200 p-4">
+                    <div class="mb-1 flex items-center gap-2"><i class="ti ti-ban text-danger-500"></i><span class="card-title">Pedido rechazado</span></div>
+                    <p class="text-sm">{{ $t->motivo_rechazo }}</p>
+                </div>
+            @endif
+            @if ($u->puedeAsignar() && ! in_array($t->estado, ['resuelto', 'rechazado']))
                 <form method="POST" action="{{ route('tickets.clasificar', $t) }}" class="card p-4 space-y-3">
                     @csrf
                     <div class="flex items-center gap-2">
@@ -146,7 +165,7 @@
                     </div>
                 </form>
             @endif
-            @if ($u->puedeAsignar() && $t->estado !== 'resuelto')
+            @if ($u->puedeAsignar() && in_array($t->estado, \App\Models\Ticket::ABIERTOS))
                 <form method="POST" action="{{ route('tickets.asignar', $t) }}" class="card p-4"
                       data-confirmar="¿{{ $t->tecnico ? 'Reasignar' : 'Asignar' }} {{ $t->codigo }} a {opcion}?" data-confirmar-boton="{{ $t->tecnico ? 'Reasignar' : 'Asignar' }}" data-resetear>
                     @csrf
@@ -250,4 +269,5 @@
             </div>
         </aside>
     </div>
+    @includeWhen($t->estado === 'por_validar' && $u->puedeAsignar(), 'tickets._rechazar')
 </x-layout>

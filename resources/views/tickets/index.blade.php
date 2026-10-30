@@ -17,4 +17,5 @@
             @include('tickets._bandeja')
         </div>
     </div>
+    @includeWhen(auth()->user()->puedeAsignar(), 'tickets._rechazar')
 </x-layout>

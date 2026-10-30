@@ -10,18 +10,21 @@ use Illuminate\Support\Str;
 class Ticket extends Model
 {
     const ESTADOS = [
+        'por_validar' => 'Por validar',
         'pendiente' => 'Por asignar',
         'asignado' => 'Asignado',
         'en_camino' => 'En camino',
         'en_atencion' => 'En atención',
         'resuelto' => 'Resuelto',
+        'rechazado' => 'Rechazado',
     ];
 
+    /** En la cola de atención (los "por validar" aún no entran; los rechazados nunca). */
     const ABIERTOS = ['pendiente', 'asignado', 'en_camino', 'en_atencion'];
 
     const SLA_HORAS = ['alta' => 4, 'media' => 24, 'baja' => 72];
 
-    const CANALES = ['whatsapp' => 'WhatsApp', 'correo' => 'Correo', 'llamada' => 'Llamada', 'presencial' => 'Presencial', 'portal' => 'Portal web'];
+    const CANALES = ['whatsapp' => 'WhatsApp', 'correo' => 'Correo', 'llamada' => 'Llamada', 'presencial' => 'Presencial', 'portal' => 'Portal web', 'formulario' => 'Formulario público'];
 
     protected function casts(): array
     {
@@ -42,7 +45,7 @@ class Ticket extends Model
 
         static::created(function (Ticket $t) {
             $t->forceFill(['codigo' => 'OTI-'.str_pad($t->id, 4, '0', STR_PAD_LEFT)])->saveQuietly();
-            $t->eventos()->create(['user_id' => $t->creado_por, 'estado' => 'pendiente', 'nota' => 'Registrado por '.self::CANALES[$t->canal]]);
+            $t->eventos()->create(['user_id' => $t->creado_por, 'estado' => $t->estado ?? 'pendiente', 'nota' => 'Registrado por '.self::CANALES[$t->canal]]);
         });
     }
 
@@ -132,8 +135,23 @@ class Ticket extends Model
                 ? ['ocupado', "{$this->tecnico->name} está atendiendo otro pedido en este momento. Irá a ayudarte apenas termine."]
                 : ['espera', "{$this->tecnico->name} atenderá tu pedido."],
             'en_camino' => ['camino', "{$this->tecnico->name} va en camino."],
+            'por_validar' => ['espera', 'Recibimos tu pedido. La mesa de ayuda lo está validando; apenas lo apruebe, entra a la cola de atención.'],
+            'rechazado' => ['rechazado', 'La mesa de ayuda no aprobó este pedido'.($this->motivo_rechazo ? ": {$this->motivo_rechazo}" : '.')],
             default => null,
         };
+    }
+
+    /** La mesa aprueba un pedido del formulario público: entra a la cola y el plazo empieza a contar desde ahora. */
+    public function validar(User $user): void
+    {
+        $this->vence_at = now()->addHours(self::SLA_HORAS[$this->prioridad]);
+        $this->cambiarEstado('pendiente', $user, 'Validado por la mesa de ayuda');
+    }
+
+    public function rechazar(User $user, string $motivo): void
+    {
+        $this->motivo_rechazo = $motivo;
+        $this->cambiarEstado('rechazado', $user, 'Rechazado: '.$motivo);
     }
 
     /** ¿Alguien del equipo de este ticket está en camino o atendiendo otro ticket ahora? */
@@ -157,14 +175,23 @@ class Ticket extends Model
         return $this->hasMany(TicketEvento::class)->latest('id');
     }
 
+    /** Pedidos reales para indicadores y reportes: sin los que esperan validación ni los rechazados. */
+    public function scopeValidos($q)
+    {
+        return $q->whereNotIn('tickets.estado', ['por_validar', 'rechazado']);
+    }
+
     public function scopeAbiertos($q)
     {
         return $q->whereIn('estado', self::ABIERTOS);
     }
 
-    /** verde | ambar | rojo (abiertos) — cumplido | fuera (resueltos) */
+    /** verde | ambar | rojo (abiertos) — cumplido | fuera (resueltos) — neutro (rechazados) */
     public function semaforo(): string
     {
+        if ($this->estado === 'rechazado') {
+            return 'neutro';
+        }
         if ($this->estado === 'resuelto') {
             return $this->resuelto_at <= $this->vence_at ? 'cumplido' : 'fuera';
         }

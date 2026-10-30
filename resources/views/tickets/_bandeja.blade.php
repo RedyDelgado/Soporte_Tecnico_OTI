@@ -20,12 +20,12 @@
     <div class="card overflow-hidden">
         <div class="flex flex-wrap items-center gap-3 border-b border-neutral-100 px-4 py-3">
             <div class="flex rounded-lg bg-neutral-100 p-0.5 text-sm">
-                @foreach (['pend' => 'Por asignar', 'cur' => 'En curso', 'all' => 'Todos'] as $k => $txt)
+                @foreach (array_filter(['val' => $puedeAsignar || $resumen['val'] ? 'Por validar' : null, 'pend' => 'Por asignar', 'cur' => 'En curso', 'all' => 'Todos']) as $k => $txt)
                     <a href="?{{ http_build_query(['f' => $k, 'sede' => request('sede'), 'por_pagina' => request('por_pagina')]) }}" @class([
                         'rounded-md px-3 py-1.5 font-medium transition',
                         'bg-white text-neutral-900 shadow-sm' => $filtro === $k,
                         'text-neutral-500 hover:text-neutral-800' => $filtro !== $k,
-                    ])>{{ $txt }}</a>
+                    ])>{{ $txt }}@if ($k === 'val' && $resumen['val'])<span class="ml-1.5 rounded-full bg-warn-500 px-1.5 text-[11px] font-semibold text-white">{{ $resumen['val'] }}</span>@endif</a>
                 @endforeach
             </div>
             <form class="ml-auto">
@@ -44,7 +44,7 @@
                 <thead>
                     <tr>
                         <th class="w-8"></th><th>Código</th><th>Pedido</th><th>Sede y área</th><th>Solicitante</th>
-                        <th class="w-60">{{ $filtro === 'pend' && $puedeAsignar ? 'Asignar a' : 'Técnico' }}</th>
+                        <th class="w-60">{{ $filtro === 'val' ? 'Validación' : ($filtro === 'pend' && $puedeAsignar ? 'Asignar a' : 'Técnico') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -65,9 +65,20 @@
                                 <div class="font-medium text-neutral-800">{{ $t->sede->nombre }}</div>
                                 <div class="text-xs muted">{{ $t->area->nombre }}</div>
                             </td>
-                            <td class="max-w-44 truncate">{{ $t->solicitante->nombre }}</td>
+                            <td class="max-w-44">
+                                <div class="truncate">{{ $t->solicitante->nombre }}</div>
+                                @if ($t->estado === 'por_validar')<div class="text-xs muted">{{ $t->solicitante->telefono }}</div>@endif
+                            </td>
                             <td>
-                                @if ($t->estado === 'pendiente' && $puedeAsignar)
+                                @if ($t->estado === 'por_validar' && $puedeAsignar)
+                                    <div class="flex gap-1.5">
+                                        <form method="POST" action="{{ route('tickets.validar', $t) }}" data-confirmar="¿Validar el pedido {{ $t->codigo }} de {{ $t->solicitante->nombre }}? Pasará a la cola por asignar." data-confirmar-boton="Validar">
+                                            @csrf
+                                            <button class="btn btn-sm !border-ok-600 !bg-ok-600 !text-white hover:!bg-ok-700"><i class="ti ti-check"></i>Validar</button>
+                                        </form>
+                                        <button type="button" class="btn btn-sm" onclick="rechazarPedido('{{ route('tickets.rechazar', $t) }}', '{{ $t->codigo }}')"><i class="ti ti-x"></i>Rechazar</button>
+                                    </div>
+                                @elseif ($t->estado === 'pendiente' && $puedeAsignar)
                                     <form method="POST" action="{{ route('tickets.asignar', $t) }}" data-confirmar="¿Asignar {{ $t->codigo }} a {opcion}?" data-confirmar-boton="Asignar" data-resetear>
                                         @csrf
                                         <select name="tecnico_id" class="input !py-1.5" onchange="this.form.requestSubmit()" aria-label="Asignar {{ $t->codigo }}">

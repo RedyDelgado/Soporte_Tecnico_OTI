@@ -29,7 +29,7 @@ class PortalTest extends TestCase
 
     public function test_pagina_publica_muestra_qr_e_ingreso(): void
     {
-        $this->get('/login')->assertOk()->assertSee('Regístralo desde tu celular')->assertSee('<svg', false);
+        $this->get('/login')->assertOk()->assertSee('Con tu correo UNIQ, desde el celular')->assertSee('<svg', false);
     }
 
     public function test_google_solo_acepta_correo_uniq_y_crea_usuario(): void

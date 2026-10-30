@@ -17,7 +17,7 @@ class PanelController extends Controller
         $mes = Carbon::parse($request->query('mes', now()->format('Y-m')).'-01');
         $rango = [$mes->copy()->startOfMonth(), $mes->copy()->endOfMonth()];
 
-        $base = fn () => Ticket::query()
+        $base = fn () => Ticket::validos()
             ->when(! $user->puedeAsignar(), fn ($q) => $q->where('tecnico_id', $user->id))
             ->when($request->query('sede'), fn ($q, $s) => $q->where('sede_id', $s));
 

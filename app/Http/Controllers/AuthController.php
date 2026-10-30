@@ -16,6 +16,14 @@ class AuthController extends Controller
         return view('auth.login', ['googleListo' => filled(config('services.google.client_id'))]);
     }
 
+    /** Acceso de emergencia con contraseña (fuera de la página pública); solo si OTI_LOGIN_PASSWORD=true. */
+    public function clave()
+    {
+        abort_unless(config('oti.login_password'), 404);
+
+        return view('auth.clave');
+    }
+
     public function google()
     {
         abort_unless(filled(config('services.google.client_id')), 404);

@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Area;
 use App\Models\Categoria;
 use App\Models\Sede;
+use App\Models\Solicitante;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 /** Reportes del administrador: quién pide más (áreas y personas), qué se pide más y qué se repite. */
 class ReporteController extends Controller
@@ -88,8 +89,8 @@ class ReporteController extends Controller
         }
 
         $titulo = match (true) {
-            (bool) $request->query('area') => 'Pedidos del área '.optional(\App\Models\Area::find($request->query('area')))->nombre,
-            (bool) $request->query('solicitante') => 'Pedidos de '.optional(\App\Models\Solicitante::find($request->query('solicitante')))->nombre,
+            (bool) $request->query('area') => 'Pedidos del área '.optional(Area::find($request->query('area')))->nombre,
+            (bool) $request->query('solicitante') => 'Pedidos de '.optional(Solicitante::find($request->query('solicitante')))->nombre,
             (bool) $request->query('categoria') => 'Pedidos de «'.optional(Categoria::find($request->query('categoria')))->nombre.'»',
             default => 'Todos los pedidos',
         };
@@ -111,7 +112,7 @@ class ReporteController extends Controller
 
     private function filtrados(Request $request, Carbon $desde, Carbon $hasta)
     {
-        return Ticket::query()
+        return Ticket::validos()
             ->whereBetween('tickets.created_at', [$desde, $hasta])
             ->when($request->query('sede'), fn ($q, $s) => $q->where('tickets.sede_id', $s));
     }

@@ -24,7 +24,7 @@ class TicketFoto extends Model
         return Storage::disk('public')->url($this->ruta);
     }
 
-    public static function guardarTodas(Ticket $ticket, array $archivos, string $etapa, User $user): void
+    public static function guardarTodas(Ticket $ticket, array $archivos, string $etapa, ?User $user): void
     {
         foreach (array_slice($archivos, 0, 3) as $archivo) {
             $ruta = "fotos/{$ticket->id}/".Str::random(20).'.webp';
@@ -34,7 +34,7 @@ class TicketFoto extends Model
             } else {
                 Storage::disk('public')->put($ruta, $contenido);
             }
-            self::create(['ticket_id' => $ticket->id, 'user_id' => $user->id, 'etapa' => $etapa,
+            self::create(['ticket_id' => $ticket->id, 'user_id' => $user?->id, 'etapa' => $etapa,
                 'ruta' => $ruta, 'bytes' => Storage::disk('public')->size($ruta)]);
         }
     }

@@ -25,6 +25,7 @@ class TicketController extends Controller
 
         $tickets = match ($filtro) {
             'cur' => $q->whereIn('estado', ['asignado', 'en_camino', 'en_atencion'])->orderBy('vence_at'),
+            'val' => $q->where('estado', 'por_validar')->oldest('id'),
             'all' => $q->latest('id'),
             default => $q->where('estado', 'pendiente')->orderBy('vence_at'),
         };
@@ -32,6 +33,7 @@ class TicketController extends Controller
 
         $abiertos = Ticket::abiertos()->get(['id', 'estado', 'created_at', 'vence_at']);
         $resumen = [
+            'val' => Ticket::where('estado', 'por_validar')->count(),
             'pend' => $abiertos->where('estado', 'pendiente')->count(),
             'cur' => $abiertos->where('estado', '!=', 'pendiente')->count(),
             'rojo' => $abiertos->filter(fn ($t) => $t->semaforo() === 'rojo')->count(),
@@ -101,12 +103,30 @@ class TicketController extends Controller
 
     public function asignar(Request $request, Ticket $ticket)
     {
-        abort_unless($request->user()->puedeAsignar() && $ticket->estado !== 'resuelto', 403);
+        abort_unless($request->user()->puedeAsignar() && in_array($ticket->estado, Ticket::ABIERTOS), 403);
         $request->validate(['tecnico_id' => ['required', $this->reglaTecnico()]]);
 
         $this->asignarA($ticket, User::find($request->tecnico_id), $request->user());
 
         return $request->expectsJson() ? response()->json(['ok' => true]) : back()->with('ok', 'Ticket asignado');
+    }
+
+    /** Aprueba un pedido del formulario público (persona sin correo UNIQ): pasa a la cola de atención. */
+    public function validar(Request $request, Ticket $ticket)
+    {
+        abort_unless($ticket->estado === 'por_validar', 403);
+        $ticket->validar($request->user());
+
+        return back()->with('ok', "{$ticket->codigo} validado: ya está en la cola por asignar");
+    }
+
+    public function rechazar(Request $request, Ticket $ticket)
+    {
+        abort_unless($ticket->estado === 'por_validar', 403);
+        $request->validate(['motivo' => 'required|max:255']);
+        $ticket->rechazar($request->user(), $request->motivo);
+
+        return back()->with('ok', "{$ticket->codigo} rechazado");
     }
 
     /** Técnicos que van de apoyo con el responsable. Se reemplaza la lista completa. */
@@ -130,7 +150,7 @@ class TicketController extends Controller
     /** La mesa corrige categoría y prioridad (p. ej. pedidos del portal "Por clasificar"); el plazo se recalcula. */
     public function clasificar(Request $request, Ticket $ticket)
     {
-        abort_unless($ticket->estado !== 'resuelto', 403);
+        abort_if(in_array($ticket->estado, ['resuelto', 'rechazado']), 403);
         $data = $request->validate([
             'categoria_id' => 'required|exists:categorias,id',
             'prioridad' => 'required|in:'.implode(',', array_keys(Ticket::SLA_HORAS)),
