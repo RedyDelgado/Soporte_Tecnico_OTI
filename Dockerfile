@@ -18,4 +18,4 @@ COPY . .
 COPY --from=assets /app/public/build public/build
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
     && chown -R www-data:www-data storage bootstrap/cache
-CMD ["sh", "-c", "php artisan migrate --force && php artisan storage:link; apache2-foreground"]
+CMD ["sh", "-c", "php artisan migrate --force && php artisan optimize && php artisan storage:link; apache2-foreground"]

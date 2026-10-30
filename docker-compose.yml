@@ -1,29 +1,54 @@
 services:
   app:
     build: .
+    restart: unless-stopped
+    # Solo accesible desde el propio servidor; el público entra por Caddy (HTTPS) o por el proxy de la UNIQ.
     ports:
-      - "8080:80"
+      - "127.0.0.1:${APP_PORT:-8080}:80"
     env_file: .env
     environment:
       DB_HOST: mysql
       DB_PORT: 3306
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     volumes:
       - storage:/var/www/html/storage/app
 
   mysql:
     image: mysql:8.4
+    restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "3307:3306"
+      - "127.0.0.1:${DB_HOST_PORT:-3307}:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
     volumes:
       - mysql:/var/lib/mysql
+
+  # HTTPS automático (Let's Encrypt) para el dominio de APP_URL.
+  # Solo si el servidor NO tiene ya Nginx/Apache en los puertos 80 y 443: docker compose --profile https up -d
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    profiles: ["https"]
+    command: caddy reverse-proxy --from ${DOMINIO:-soporteoti.uniq.edu.pe} --to app:80
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - app
+    volumes:
+      - caddy:/data
 
 volumes:
   mysql:
   storage:
+  caddy:

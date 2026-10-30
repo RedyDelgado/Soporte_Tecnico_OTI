@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\SoloActivos;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,7 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: \App\Http\Middleware\SoloActivos::class);
+        $middleware->web(append: SoloActivos::class);
+        // Detrás de Caddy o del proxy de la UNIQ (la app solo escucha en 127.0.0.1): respeta X-Forwarded-Proto para generar URLs https.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
