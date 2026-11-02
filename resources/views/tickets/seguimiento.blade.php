@@ -5,7 +5,7 @@
 <x-layout :titulo="$ticket->codigo">
     <div class="mx-auto max-w-lg">
         <div class="mb-4 flex items-center gap-2">
-            <img src="/icono.svg" class="size-8" alt="">
+            <img src="/logo.webp" class="size-12" alt="Llama OTI">
             <span class="font-semibold">Oficina de Tecnologías de la Información</span>
         </div>
         @if (session('registrado'))
@@ -14,7 +14,7 @@
                 <p class="mb-3 text-sm">Guarda este enlace (o toma una captura): con él verás el avance de tu pedido <b>{{ $ticket->codigo }}</b>.</p>
                 <div class="flex gap-2">
                     <input readonly value="{{ route('seguimiento', $ticket->token) }}" class="input !text-xs" aria-label="Enlace de seguimiento">
-                    <button type="button" class="btn !px-2.5" @click="navigator.clipboard.writeText('{{ route('seguimiento', $ticket->token) }}'); copiado = true" aria-label="Copiar enlace">
+                    <button type="button" class="btn !px-2.5" @click="navigator.clipboard.writeText('{{ route('seguimiento', $ticket->token) }}'); copiado = true; setTimeout(() => copiado = false, 2000)" aria-label="Copiar enlace">
                         <i class="ti" :class="copiado ? 'ti-check text-ok-600' : 'ti-copy'"></i>
                     </button>
                 </div>

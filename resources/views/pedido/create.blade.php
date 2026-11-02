@@ -4,7 +4,7 @@
 <x-layout titulo="Pedir soporte">
     <div class="mx-auto max-w-3xl py-4 sm:py-8">
         <div class="mb-4 flex items-center gap-3">
-            <img src="/icono.svg" class="size-10" alt="">
+            <img src="/logo.webp" class="size-14" alt="Llama OTI">
             <div>
                 <h1>Pedir soporte a la OTI</h1>
                 <p class="text-sm muted">Para quienes no tienen correo institucional. La mesa de ayuda valida tu pedido antes de atenderlo.</p>

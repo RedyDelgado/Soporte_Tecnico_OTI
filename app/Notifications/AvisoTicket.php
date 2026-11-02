@@ -23,7 +23,7 @@ class AvisoTicket extends Notification
         return (new WebPushMessage)
             ->title($this->titulo)
             ->body("{$t->codigo} · {$t->sede->nombre}: {$t->descripcion}")
-            ->icon('/icono.svg')
+            ->icon('/logo-192.png')
             ->tag($t->codigo)
             ->data(['url' => route('tickets.show', $t)]);
     }

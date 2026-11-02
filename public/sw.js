@@ -1,6 +1,6 @@
 self.addEventListener('push', (e) => {
     const d = e.data ? e.data.json() : {};
-    e.waitUntil(self.registration.showNotification(d.title || 'Mesa de ayuda OTI', {
+    e.waitUntil(self.registration.showNotification(d.title || 'Llama OTI', {
         body: d.body,
         icon: d.icon,
         tag: d.tag,

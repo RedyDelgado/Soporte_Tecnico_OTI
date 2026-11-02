@@ -64,6 +64,9 @@
                         <form method="POST" action="{{ route('tickets.estado', $t) }}">@csrf<input type="hidden" name="estado" value="en_atencion">
                             <button class="btn btn-primary"><i class="ti ti-tool"></i>Empecé la atención</button></form>
                     @endif
+                    @if ($t->tecnico_id === $u->id && in_array($t->estado, \App\Models\Ticket::ABIERTOS))
+                        <button type="button" class="btn" onclick="document.getElementById('modal-devolver').showModal()"><i class="ti ti-arrow-back-up"></i>Devolver a la cola</button>
+                    @endif
                     @if ($t->solicitante->telefono)
                         <a href="tel:{{ $t->solicitante->telefono }}" class="btn"><i class="ti ti-phone"></i>Llamar</a>
                         <a href="{{ $t->linkWhatsapp() }}" target="_blank" rel="noopener" class="btn"><i class="ti ti-brand-whatsapp"></i>WhatsApp</a>
@@ -270,4 +273,20 @@
         </aside>
     </div>
     @includeWhen($t->estado === 'por_validar' && $u->puedeAsignar(), 'tickets._rechazar')
+    @if ($t->tecnico_id === $u->id && in_array($t->estado, \App\Models\Ticket::ABIERTOS))
+        <x-modal id="modal-devolver" titulo="Devolver a la cola">
+            <form method="POST" action="{{ route('tickets.devolver', $t) }}" class="space-y-4">
+                @csrf
+                <p class="text-sm muted"><b class="text-neutral-900">{{ $t->codigo }}</b> vuelve a «Por asignar» y la mesa de ayuda recibe un aviso para pasarlo a otro técnico.</p>
+                <div>
+                    <label class="label" for="devolver-motivo">Motivo</label>
+                    <textarea id="devolver-motivo" name="motivo" rows="2" class="input" required maxlength="255" placeholder="Estoy en otra sede / requiere a alguien de redes / no tengo el repuesto"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-neutral-100 pt-4">
+                    <button type="button" class="btn" onclick="this.closest('dialog').close()">Cancelar</button>
+                    <button class="btn btn-primary"><i class="ti ti-arrow-back-up"></i>Devolver</button>
+                </div>
+            </form>
+        </x-modal>
+    @endif
 </x-layout>

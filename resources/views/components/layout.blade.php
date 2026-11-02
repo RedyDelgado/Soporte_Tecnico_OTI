@@ -33,9 +33,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="color-scheme" content="light">
-    <meta name="theme-color" content="#4f46e5">
-    <title>{{ $titulo ? $titulo.' · ' : '' }}Mesa de ayuda OTI</title>
-    <link rel="icon" href="/icono.svg">
+    <meta name="theme-color" content="#173556">
+    <title>{{ $titulo ? $titulo.' · ' : '' }}Llama OTI</title>
+    <link rel="icon" href="/logo-192.png">
+    <link rel="apple-touch-icon" href="/logo-192.png">
     <link rel="manifest" href="/manifest.json">
     @fonts
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -49,12 +50,12 @@
         {{-- Sidebar: menú principal --}}
         <div x-show="menu" x-cloak x-transition.opacity class="fixed inset-0 z-30 bg-neutral-900/40 lg:hidden" @click="menu = false"></div>
         <aside :class="menu ? 'translate-x-0' : '-translate-x-full'"
-               class="fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-neutral-200 bg-white transition-transform duration-200 lg:translate-x-0">
+               class="fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-neutral-200 bg-white transition-transform duration-300 ease-drawer lg:translate-x-0">
             <a href="{{ route('inicio') }}" class="flex h-14 shrink-0 items-center gap-2.5 border-b border-neutral-100 px-5">
-                <img src="/icono.svg" class="size-8" alt="">
+                <img src="/logo.webp" class="size-10" alt="Llama OTI">
                 <span class="leading-tight">
-                    <span class="block text-sm font-semibold text-neutral-900">Mesa de ayuda</span>
-                    <span class="block text-xs muted">Oficina de TI</span>
+                    <span class="block text-sm font-semibold text-neutral-900">Llama OTI</span>
+                    <span class="block text-xs muted">Mesa de ayuda</span>
                 </span>
             </a>
             <nav class="flex-1 overflow-y-auto px-3 pb-6">
@@ -141,10 +142,8 @@
          x-init="@if (session('ok')) $store.toasts.push(@js(session('ok')), 'ok', {{ max(4000, mb_strlen(session('ok')) * 70) }}) @endif
                  @if ($errors->any() && auth()->check()) $store.toasts.push(@js($errors->first()), 'error', 7000) @endif">
         <template x-for="t in $store.toasts.lista" :key="t.id">
-            <div x-transition:enter="transition duration-200 ease-out" x-transition:enter-start="translate-x-4 opacity-0"
-                 x-transition:leave="transition duration-150 ease-in" x-transition:leave-end="translate-x-4 opacity-0"
-                 class="pointer-events-auto flex items-start gap-2.5 rounded-lg border bg-white px-3.5 py-2.5 text-sm shadow-lg shadow-neutral-900/10"
-                 :class="{ 'border-ok-200': t.tipo === 'ok', 'border-danger-200': t.tipo === 'error', 'border-brand-200': t.tipo === 'info' }">
+            <div class="pointer-events-auto flex items-start gap-2.5 rounded-lg border bg-white px-3.5 py-2.5 text-sm shadow-lg shadow-neutral-900/10 transition duration-200 ease-out starting:translate-x-4 starting:opacity-0 motion-reduce:starting:translate-x-0"
+                 :class="{ 'border-ok-200': t.tipo === 'ok', 'border-danger-200': t.tipo === 'error', 'border-brand-200': t.tipo === 'info', 'translate-x-4 opacity-0 !duration-150 motion-reduce:translate-x-0': t.saliendo }">
                 <i class="ti mt-0.5 text-base" :class="{ 'ti-circle-check text-ok-600': t.tipo === 'ok', 'ti-alert-circle text-danger-600': t.tipo === 'error', 'ti-bell-ringing text-brand-600': t.tipo === 'info' }"></i>
                 <span class="flex-1 text-neutral-800" x-text="t.texto"></span>
                 <button type="button" @click="$store.toasts.quitar(t.id)" class="text-neutral-400 hover:text-neutral-700" aria-label="Cerrar"><i class="ti ti-x"></i></button>

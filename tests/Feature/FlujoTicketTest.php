@@ -7,7 +7,9 @@ use App\Models\Categoria;
 use App\Models\Solicitante;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Notifications\AvisoTicket;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class FlujoTicketTest extends TestCase
@@ -69,6 +71,35 @@ class FlujoTicketTest extends TestCase
             $this->actingAs($jefe)->get($url)->assertOk();
         }
         $this->actingAs($luis)->get('/usuarios')->assertForbidden();
+    }
+
+    public function test_reasignar_avisa_al_anterior_y_el_tecnico_puede_devolver(): void
+    {
+        Notification::fake();
+        $mesa = User::where('rol', 'mesa')->first();
+        $luis = User::where('email', 'luis@oti.local')->first();
+        $carmen = User::where('email', 'carmen@oti.local')->first();
+        $area = Area::create(['sede_id' => 1, 'nombre' => 'Caja']);
+        $eva = Solicitante::create(['nombre' => 'Eva', 'area_id' => $area->id]);
+        $t = Ticket::create(['sede_id' => 1, 'area_id' => $area->id, 'solicitante_id' => $eva->id, 'canal' => 'llamada',
+            'categoria_id' => 1, 'prioridad' => 'media', 'descripcion' => 'PC lenta', 'creado_por' => $mesa->id]);
+
+        $this->actingAs($mesa)->post("/tickets/{$t->id}/asignar", ['tecnico_id' => $luis->id]);
+        $this->actingAs($mesa)->post("/tickets/{$t->id}/asignar", ['tecnico_id' => $carmen->id])->assertRedirect();
+
+        $this->assertSame($carmen->id, $t->fresh()->tecnico_id);
+        $this->assertSame("Reasignado de {$luis->name} a {$carmen->name}", $t->eventos()->latest('id')->value('nota'));
+        Notification::assertSentTo($luis, AvisoTicket::class, fn ($n) => $n->titulo === "Tu ticket pasó a {$carmen->name}");
+
+        // Solo el responsable devuelve, y con motivo.
+        $this->actingAs($luis)->post("/tickets/{$t->id}/devolver", ['motivo' => 'x'])->assertForbidden();
+        $this->actingAs($carmen)->post("/tickets/{$t->id}/devolver")->assertSessionHasErrors('motivo');
+        $this->actingAs($carmen)->post("/tickets/{$t->id}/devolver", ['motivo' => 'Estoy en otra sede'])->assertRedirect('/tickets/mios');
+
+        $t->refresh();
+        $this->assertSame('pendiente', $t->estado);
+        $this->assertNull($t->tecnico_id);
+        Notification::assertSentTo($mesa, AvisoTicket::class, fn ($n) => $n->titulo === "{$carmen->name} devolvió un ticket");
     }
 
     public function test_jefe_puede_impersonar_y_volver(): void

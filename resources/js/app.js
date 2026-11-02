@@ -23,11 +23,15 @@ Alpine.store('toasts', {
     lista: [],
     push(texto, tipo = 'ok', ms = 4000) {
         const id = ++idToast;
-        this.lista.push({ id, texto, tipo });
+        this.lista.push({ id, texto, tipo, saliendo: false });
         setTimeout(() => this.quitar(id), ms);
     },
+    // Sale por el mismo borde por el que entró y luego se retira de la lista.
     quitar(id) {
-        this.lista = this.lista.filter((t) => t.id !== id);
+        const toast = this.lista.find((t) => t.id === id);
+        if (!toast || toast.saliendo) return;
+        toast.saliendo = true;
+        setTimeout(() => (this.lista = this.lista.filter((t) => t.id !== id)), 150);
     },
 });
 window.toast = (texto, tipo, ms) => Alpine.store('toasts').push(texto, tipo, ms);
@@ -118,6 +122,10 @@ Alpine.data('bandeja', (maxId) => ({
             this.$refs.contenido.innerHTML = await r.text();
             const max = Number(this.$refs.contenido.querySelector('[data-max]')?.dataset.max ?? 0);
             if (max > this.maxId) {
+                // Solo las filas recién llegadas entran con animación, no todo el listado en cada consulta.
+                this.$refs.contenido.querySelectorAll('tr[data-id]').forEach((tr) => {
+                    if (Number(tr.dataset.id) > this.maxId) tr.classList.add('entra');
+                });
                 this.nuevos = max - this.maxId;
                 toast(this.nuevos === 1 ? 'Llegó 1 pedido nuevo' : `Llegaron ${this.nuevos} pedidos nuevos`, 'info', 6000);
                 beep();

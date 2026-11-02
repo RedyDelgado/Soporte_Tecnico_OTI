@@ -40,16 +40,16 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="tabla min-w-[860px]">
+            <table class="tabla min-w-[960px]">
                 <thead>
                     <tr>
-                        <th class="w-8"></th><th>Código</th><th>Pedido</th><th>Sede y área</th><th>Solicitante</th>
+                        <th class="w-8"></th><th>Código</th><th>Pedido</th><th>Sede y área</th><th>Solicitante</th><th>Fechas</th>
                         <th class="w-60">{{ $filtro === 'val' ? 'Validación' : ($filtro === 'pend' && $puedeAsignar ? 'Asignar a' : 'Técnico') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($tickets as $t)
-                        <tr @class(['!bg-brand-50/60' => $t->created_at->gt(now()->subMinute())])>
+                        <tr data-id="{{ $t->id }}" @class(['!bg-brand-50/60' => $t->created_at->gt(now()->subMinute())])>
                             <td><x-semaforo :ticket="$t" /></td>
                             <td class="whitespace-nowrap"><a href="{{ route('tickets.show', $t) }}" class="link font-mono">{{ $t->codigo }}</a></td>
                             <td class="max-w-80">
@@ -57,8 +57,6 @@
                                 <div class="mt-1 flex items-center gap-2 text-xs muted">
                                     <x-etiqueta :esp="$t->categoria->especialidad" />
                                     <span class="truncate">{{ $t->categoria->nombre }}</span>
-                                    <span>·</span>
-                                    <span class="whitespace-nowrap">{{ $t->created_at->diffForHumans(short: true) }}</span>
                                 </div>
                             </td>
                             <td>
@@ -69,6 +67,12 @@
                                 <div class="truncate">{{ $t->solicitante->nombre }}</div>
                                 @if ($t->estado === 'por_validar')<div class="text-xs muted">{{ $t->solicitante->telefono }}</div>@endif
                             </td>
+                            <td class="text-xs whitespace-nowrap tabular-nums">
+                                <div title="Registrado {{ $t->created_at->diffForHumans() }}"><span class="muted">Registro</span> {{ $t->created_at->format('d/m H:i') }}</div>
+                                @if ($t->asignado_at)
+                                    <div class="mt-0.5" title="Asignado {{ $t->asignado_at->diffForHumans() }}"><span class="muted">Asignado</span> {{ $t->asignado_at->format('d/m H:i') }}</div>
+                                @endif
+                            </td>
                             <td>
                                 @if ($t->estado === 'por_validar' && $puedeAsignar)
                                     <div class="flex gap-1.5">
@@ -78,16 +82,23 @@
                                         </form>
                                         <button type="button" class="btn btn-sm" onclick="rechazarPedido('{{ route('tickets.rechazar', $t) }}', '{{ $t->codigo }}')"><i class="ti ti-x"></i>Rechazar</button>
                                     </div>
-                                @elseif ($t->estado === 'pendiente' && $puedeAsignar)
-                                    <form method="POST" action="{{ route('tickets.asignar', $t) }}" data-confirmar="¿Asignar {{ $t->codigo }} a {opcion}?" data-confirmar-boton="Asignar" data-resetear>
+                                @elseif (in_array($t->estado, \App\Models\Ticket::ABIERTOS) && $puedeAsignar)
+                                    @php $accion = $t->tecnico ? 'Reasignar' : 'Asignar'; @endphp
+                                    <form method="POST" action="{{ route('tickets.asignar', $t) }}" data-confirmar="¿{{ $accion }} {{ $t->codigo }} a {opcion}?" data-confirmar-boton="{{ $accion }}" data-resetear>
                                         @csrf
-                                        <select name="tecnico_id" class="input !py-1.5" onchange="this.form.requestSubmit()" aria-label="Asignar {{ $t->codigo }}">
+                                        <select name="tecnico_id" class="input !py-1.5" onchange="this.form.requestSubmit()" aria-label="{{ $accion }} {{ $t->codigo }}">
                                             <option value="">Elegir técnico…</option>
                                             @foreach ($tecnicos->sortBy(fn ($u) => $u->especialidad === $t->categoria->especialidad ? 0 : 1) as $u)
-                                                <option value="{{ $u->id }}">{{ $u->name }}{{ $u->especialidad ? ' ('.$u->especialidad.')' : '' }} · {{ $u->abiertos }} en cola{{ $u->ocupado ? ' · atendiendo ahora' : '' }}</option>
+                                                <option value="{{ $u->id }}" @selected($t->tecnico_id === $u->id)>{{ $u->name }}{{ $u->especialidad ? ' ('.$u->especialidad.')' : '' }} · {{ $u->abiertos }} en cola{{ $u->ocupado ? ' · atendiendo ahora' : '' }}</option>
                                             @endforeach
                                         </select>
                                     </form>
+                                    @if ($t->tecnico)
+                                        <div class="mt-1 flex items-center gap-1.5">
+                                            <x-etiqueta :estado="$t->estado" />
+                                            @if ($t->apoyos->isNotEmpty())<span class="badge !px-1.5" title="Apoyo: {{ $t->apoyos->pluck('name')->implode(', ') }}">+{{ $t->apoyos->count() }} apoyo</span>@endif
+                                        </div>
+                                    @endif
                                 @elseif ($t->tecnico)
                                     <div class="flex items-center gap-2">
                                         <span class="grid size-7 shrink-0 place-items-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700">{{ mb_substr($t->tecnico->name, 0, 1) }}</span>
@@ -101,7 +112,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-16 text-center">
+                            <td colspan="7" class="py-16 text-center">
                                 <div class="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-ok-50"><i class="ti ti-mood-happy text-2xl text-ok-600"></i></div>
                                 <p class="font-medium text-neutral-900">{{ $filtro === 'pend' ? 'Todo asignado' : 'Sin tickets' }}</p>
                                 <p class="text-sm muted">{{ $filtro === 'pend' ? 'Los pedidos nuevos aparecerán aquí solos.' : 'No hay tickets en esta vista.' }}</p>

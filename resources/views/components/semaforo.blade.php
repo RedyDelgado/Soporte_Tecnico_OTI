@@ -3,7 +3,7 @@
     [$color, $texto] = [
         'verde' => ['bg-ok-500', 'A tiempo'],
         'ambar' => ['bg-warn-400', 'Por vencer'],
-        'rojo' => ['bg-danger-500 animate-pulse', 'Vencido'],
+        'rojo' => ['bg-danger-500', 'Vencido'],
         'cumplido' => ['bg-ok-500', 'Dentro del plazo'],
         'fuera' => ['bg-danger-500', 'Fuera del plazo'],
         'neutro' => ['bg-neutral-300', 'Rechazado'],

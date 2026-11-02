@@ -7,7 +7,7 @@
 
     <div class="flex flex-wrap gap-2.5">
         <template x-for="(f, i) in lista" :key="f.url">
-            <div class="group relative size-28 overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100">
+            <div class="group relative size-28 overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100 transition duration-200 ease-out starting:scale-95 starting:opacity-0 motion-reduce:starting:scale-100">
                 <img :src="f.url" class="size-full object-cover" alt="">
                 <span class="absolute bottom-1 left-1 rounded bg-neutral-900/70 px-1.5 py-0.5 text-[10px] font-medium text-white" x-text="f.peso"></span>
                 <button type="button" @click="quitar(i)" class="absolute top-1 right-1 grid size-6 place-items-center rounded-full bg-white/90 text-neutral-700 shadow hover:bg-danger-50 hover:text-danger-600" aria-label="Quitar foto"><i class="ti ti-x text-sm"></i></button>

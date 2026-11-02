@@ -43,20 +43,20 @@ Las cuentas de prueba (`*@oti.local`) solo se crean en desarrollo y en las prueb
 
 En Windows, PHP necesita `OPENSSL_CONF=C:\php\extras\ssl\openssl.cnf` para generar las claves VAPID y cifrar los avisos, y `curl.cainfo` configurado en `php.ini` para enviarlos. En Docker no hace falta nada de esto.
 
-## Producción: soporteoti.uniq.edu.pe
+## Producción: llamaoti.uniq.edu.pe
 
 En un servidor Linux con Docker (si no lo tiene: `curl -fsSL https://get.docker.com | sh`):
 
 ```bash
-git clone https://github.com/RedyDelgado/Soporte_Tecnico_OTI.git soporteoti
-cd soporteoti
+git clone https://github.com/RedyDelgado/Soporte_Tecnico_OTI.git llamaoti
+cd llamaoti
 sudo ./instalar.sh
 ```
 
 El instalador:
 
 - crea el `.env` de producción con claves aleatorias (aplicación, base de datos y avisos push);
-- configura `https://soporteoti.uniq.edu.pe` y, si el servidor no tiene ya Nginx/Apache, levanta **Caddy**, que obtiene el certificado HTTPS solo;
+- configura `https://llamaoti.uniq.edu.pe` y, si el servidor no tiene ya Nginx/Apache, levanta **Caddy**, que obtiene el certificado HTTPS solo;
 - construye e inicia los contenedores, aplica las migraciones y carga sedes y categorías (sin cuentas de prueba);
 - crea la cuenta del administrador y las del personal que indiques, con contraseñas seguras, y las guarda en `credenciales-instalacion.txt` (permiso 600). **Copia esas contraseñas a un lugar seguro y borra el archivo.**
 
@@ -64,7 +64,7 @@ Se puede volver a correr: conserva el `.env` y los datos, y a las cuentas que vu
 
 Para actualizar con lo último de GitHub: `sudo ./actualizar.sh` (conserva la base de datos y las fotos).
 
-Antes de abrirlo al público: el DNS de `soporteoti.uniq.edu.pe` debe apuntar al servidor, y en Google Cloud la URI de redirección debe ser `https://soporteoti.uniq.edu.pe/auth/google/callback`. Los avisos push requieren HTTPS; en iPhone solo llegan si el usuario agrega la web a su pantalla de inicio.
+Antes de abrirlo al público: el DNS de `llamaoti.uniq.edu.pe` debe apuntar al servidor, y en Google Cloud la URI de redirección debe ser `https://llamaoti.uniq.edu.pe/auth/google/callback`. Los avisos push requieren HTTPS; en iPhone solo llegan si el usuario agrega la web a su pantalla de inicio.
 
 ## Pruebas
 

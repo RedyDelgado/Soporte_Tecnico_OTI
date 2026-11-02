@@ -175,6 +175,20 @@ class TicketController extends Controller
         return back()->with('ok', Ticket::ESTADOS[$request->estado]);
     }
 
+    /** El responsable suelta un ticket que no puede atender: vuelve a la cola por asignar y la mesa lo redirige. */
+    public function devolver(Request $request, Ticket $ticket)
+    {
+        abort_unless($ticket->tecnico_id === $request->user()->id && in_array($ticket->estado, Ticket::ABIERTOS), 403);
+        $request->validate(['motivo' => 'required|max:255']);
+
+        $ticket->tecnico_id = null;
+        $ticket->apoyos()->detach();
+        $ticket->cambiarEstado('pendiente', $request->user(), 'Devuelto a la cola: '.$request->motivo);
+        $this->avisar(User::whereIn('rol', ['mesa', 'jefe'])->where('activo', true)->get(), $ticket, $request->user()->name.' devolvió un ticket');
+
+        return redirect()->route('tickets.mios')->with('ok', "{$ticket->codigo} devuelto a la cola");
+    }
+
     public function resolver(Request $request, Ticket $ticket)
     {
         abort_unless($this->esResponsable($request->user(), $ticket), 403);
@@ -273,10 +287,16 @@ class TicketController extends Controller
 
     private function asignarA(Ticket $ticket, User $tecnico, User $por): void
     {
+        $anterior = $ticket->tecnico_id && $ticket->tecnico_id !== $tecnico->id ? $ticket->tecnico : null;
+
         $ticket->tecnico_id = $tecnico->id;
         $ticket->apoyos()->detach($tecnico->id); // si iba de apoyo, ahora es el responsable
-        $ticket->cambiarEstado('asignado', $por, 'Asignado a '.$tecnico->name);
+        $ticket->cambiarEstado('asignado', $por, ($anterior ? "Reasignado de {$anterior->name} a " : 'Asignado a ').$tecnico->name);
         $this->avisar(collect([$tecnico]), $ticket, 'Te asignaron un ticket');
+
+        if ($anterior) {
+            $this->avisar(collect([$anterior]), $ticket, 'Tu ticket pasó a '.$tecnico->name);
+        }
     }
 
     private function esResponsable(User $user, Ticket $ticket): bool

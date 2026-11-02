@@ -8,7 +8,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-DOMINIO_DEF="soporteoti.uniq.edu.pe"
+DOMINIO_DEF="llamaoti.uniq.edu.pe"
 ADMIN_DEF="rdelgado@uniq.edu.pe"
 CRED="credenciales-instalacion.txt"
 
@@ -55,7 +55,7 @@ chmod 600 .env
 DEF=$(leer_env DOMINIO || true)
 DOMINIO=$(preguntar "Dominio del sistema" "${DEF:-$DOMINIO_DEF}" INSTALAR_DOMINIO)
 fijar DOMINIO "$DOMINIO"
-fijar APP_NAME '"Mesa de ayuda OTI"'
+fijar APP_NAME '"Llama OTI"'
 fijar APP_ENV production
 fijar APP_DEBUG false
 fijar APP_URL "https://$DOMINIO"
@@ -112,7 +112,7 @@ crear_cuenta() { # crear_cuenta correo nombre rol especialidad
 paso "Cuentas de ingreso"
 touch "$CRED"; chmod 600 "$CRED"
 if [ ! -s "$CRED" ]; then
-    printf 'Mesa de ayuda OTI - https://%s/login\nGenerado el %s. Guárdalo en un lugar seguro y borra este archivo.\n\n%-38s %-24s %s\n' \
+    printf 'Llama OTI - https://%s/login\nGenerado el %s. Guárdalo en un lugar seguro y borra este archivo.\n\n%-38s %-24s %s\n' \
         "$DOMINIO" "$(date '+%d/%m/%Y %H:%M')" CORREO ROL CONTRASEÑA >> "$CRED"
 fi
 

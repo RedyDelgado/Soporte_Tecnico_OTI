@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show')->whereNumber('ticket');
         Route::post('/tickets/{ticket}/estado', [TicketController::class, 'estado'])->name('tickets.estado');
         Route::post('/tickets/{ticket}/resolver', [TicketController::class, 'resolver'])->name('tickets.resolver');
+        Route::post('/tickets/{ticket}/devolver', [TicketController::class, 'devolver'])->name('tickets.devolver');
         Route::get('/soluciones', [TicketController::class, 'soluciones'])->name('soluciones');
         Route::get('/panel', PanelController::class)->name('panel');
         Route::post('/categorias', [CategoriaController::class, 'store'])->name('categorias.store');

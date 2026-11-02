@@ -108,11 +108,11 @@
             data: {
                 labels: @json($tendencia['labels']),
                 datasets: [
-                    { label: 'Creados', data: @json($tendencia['creados']), backgroundColor: '#c7d2fe', borderRadius: 6 },
-                    { label: 'Resueltos', data: @json($tendencia['resueltos']), backgroundColor: '#4f46e5', borderRadius: 6 },
+                    { label: 'Creados', data: @json($tendencia['creados']), backgroundColor: '#b9cce3', borderRadius: 6 },
+                    { label: 'Resueltos', data: @json($tendencia['resueltos']), backgroundColor: '#264f80', borderRadius: 6 },
                 ],
             },
-            options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }, plugins: { legend: { position: 'bottom' } } },
+            options: { animation: false, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }, plugins: { legend: { position: 'bottom' } } },
         });
     </script>
 </x-layout>
