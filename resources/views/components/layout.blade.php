@@ -34,7 +34,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="color-scheme" content="light">
     <meta name="theme-color" content="#173556">
-    <title>{{ $titulo ? $titulo.' · ' : '' }}Llama OTI</title>
+    <title>{{ $titulo ? $titulo.' · ' : '' }}Soporte OTI</title>
     <link rel="icon" href="/logo-192.png">
     <link rel="apple-touch-icon" href="/logo-192.png">
     <link rel="manifest" href="/manifest.json">
@@ -52,9 +52,9 @@
         <aside :class="menu ? 'translate-x-0' : '-translate-x-full'"
                class="fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-neutral-200 bg-white transition-transform duration-300 ease-drawer lg:translate-x-0">
             <a href="{{ route('inicio') }}" class="flex h-14 shrink-0 items-center gap-2.5 border-b border-neutral-100 px-5">
-                <img src="/logo.webp" class="size-10" alt="Llama OTI">
+                <img src="/logo.webp" class="size-10" alt="Soporte OTI">
                 <span class="leading-tight">
-                    <span class="block text-sm font-semibold text-neutral-900">Llama OTI</span>
+                    <span class="block text-sm font-semibold text-neutral-900">Soporte OTI</span>
                     <span class="block text-xs muted">Mesa de ayuda</span>
                 </span>
             </a>

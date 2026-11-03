@@ -5,7 +5,7 @@
 <x-layout :titulo="$ticket->codigo">
     <div class="mx-auto max-w-lg">
         <div class="mb-4 flex items-center gap-2">
-            <img src="/logo.webp" class="size-12" alt="Llama OTI">
+            <img src="/logo.webp" class="size-12" alt="Soporte OTI">
             <span class="font-semibold">Oficina de Tecnologías de la Información</span>
         </div>
         @if (session('registrado'))
