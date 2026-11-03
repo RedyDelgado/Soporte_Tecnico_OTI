@@ -16,7 +16,7 @@
         'Consulta' => [
             ['panel', 'ti-chart-bar', 'Panel', $personal],
             ['soluciones', 'ti-bulb', 'Soluciones', $personal],
-            ['reportes', 'ti-report-analytics', 'Reportes', $u?->esJefe()],
+            ['reportes', 'ti-report-analytics', 'Reportes', $personal],
         ],
         'Administración' => [
             ['directorio', 'ti-address-book', 'Directorio', $u?->puedeAsignar()],

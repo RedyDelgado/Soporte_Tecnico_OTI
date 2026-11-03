@@ -49,6 +49,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/tickets/{ticket}/devolver', [TicketController::class, 'devolver'])->name('tickets.devolver');
         Route::get('/soluciones', [TicketController::class, 'soluciones'])->name('soluciones');
         Route::get('/panel', PanelController::class)->name('panel');
+        Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes');
+        Route::get('/reportes/detalle', [ReporteController::class, 'detalle'])->name('reportes.detalle');
         Route::post('/categorias', [CategoriaController::class, 'store'])->name('categorias.store');
     });
 
@@ -79,7 +81,5 @@ Route::middleware('auth')->group(function () {
         Route::get('/usuarios/{usuario}', [UsuarioController::class, 'show'])->name('usuarios.show');
         Route::put('/usuarios/{usuario}', [UsuarioController::class, 'update'])->name('usuarios.update');
         Route::post('/usuarios/{usuario}/impersonar', [UsuarioController::class, 'impersonar'])->name('usuarios.impersonar');
-        Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes');
-        Route::get('/reportes/detalle', [ReporteController::class, 'detalle'])->name('reportes.detalle');
     });
 });

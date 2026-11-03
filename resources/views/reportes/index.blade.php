@@ -8,7 +8,7 @@
     $maxProb = max(1, $problemas->max('total') ?? 1);
 @endphp
 <x-layout titulo="Reportes">
-    <x-cabecera titulo="Reportes" subtitulo="Quién pide más soporte, qué se pide más y qué se repite.">
+    <x-cabecera titulo="Reportes" subtitulo="El avance del equipo, quién pide más soporte, qué se pide más y qué se repite.">
         <form class="flex flex-wrap items-end gap-2">
             <div><label class="label !text-xs" for="desde">Desde</label><input id="desde" type="date" name="desde" value="{{ $desde->toDateString() }}" class="input !py-1"></div>
             <div><label class="label !text-xs" for="hasta">Hasta</label><input id="hasta" type="date" name="hasta" value="{{ $hasta->toDateString() }}" class="input !py-1"></div>
@@ -41,6 +41,40 @@
                 <div class="mt-1 text-xl font-semibold tabular-nums text-neutral-900">{{ $v }}</div>
             </div>
         @endforeach
+    </div>
+
+    {{-- Avance del equipo --}}
+    <div class="card mb-4 overflow-hidden">
+        <div class="card-header"><i class="ti ti-users-group text-brand-600"></i><span class="card-title">Avance del equipo técnico</span>
+            <a href="{{ $csv('tecnicos') }}" class="btn btn-sm ml-auto"><i class="ti ti-file-spreadsheet"></i>Excel</a></div>
+        <div class="overflow-x-auto">
+            <table class="tabla">
+                <thead><tr><th>#</th><th>Técnico</th><th>Resueltos</th><th class="text-right">Asignados</th><th class="text-right">Abiertos</th><th class="text-right">En plazo</th><th class="text-right">Reabiertos</th><th class="text-right">Solución</th></tr></thead>
+                <tbody>
+                    @forelse ($tecnicos as $r)
+                        <tr @class(['bg-brand-50' => $r->tecnico_id == auth()->id()])>
+                            <td class="muted">{{ $loop->iteration }}</td>
+                            <td>
+                                <a href="{{ $detalle(['tecnico' => $r->tecnico_id]) }}" class="link">{{ $r->name }}</a>
+                                @if ($r->tecnico_id == auth()->id())<span class="ml-1 text-xs font-semibold text-brand-700">(tú)</span>@endif
+                                @if ($r->especialidad)<div class="mt-0.5"><x-etiqueta :esp="$r->especialidad" /></div>@endif
+                            </td>
+                            <td class="w-40">
+                                <div class="flex items-center gap-2"><span class="w-6 text-right font-semibold tabular-nums">{{ $r->resueltos }}</span>
+                                    <div class="h-1.5 flex-1 rounded-full bg-neutral-100"><div class="h-1.5 rounded-full bg-brand-500" style="width: {{ $pct($r->resueltos, $r->total) }}%"></div></div></div>
+                            </td>
+                            <td class="text-right tabular-nums">{{ $r->total }}</td>
+                            <td class="text-right tabular-nums">{{ $r->abiertos }}</td>
+                            <td class="text-right tabular-nums">{{ $pct($r->en_plazo, $r->resueltos) }}%</td>
+                            <td @class(['text-right tabular-nums', 'font-semibold text-danger-600' => $r->reabiertos > 0])>{{ $r->reabiertos }}</td>
+                            <td class="text-right whitespace-nowrap">{{ $dur($r->minutos) }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="8" class="py-6 text-center muted">Ningún pedido asignado a técnicos en el periodo.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="grid gap-4 2xl:grid-cols-2">

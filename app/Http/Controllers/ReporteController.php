@@ -7,10 +7,11 @@ use App\Models\Categoria;
 use App\Models\Sede;
 use App\Models\Solicitante;
 use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
-/** Reportes del administrador: quién pide más (áreas y personas), qué se pide más y qué se repite. */
+/** Reportes del personal OTI: quién pide más (áreas y personas), qué se pide más, qué se repite y el avance de cada técnico. */
 class ReporteController extends Controller
 {
     public function index(Request $request)
@@ -59,14 +60,22 @@ class ReporteController extends Controller
             ->groupBy('tickets.area_id', 'categoria_id', 'areas.nombre', 'sedes.nombre', 'categorias.nombre')
             ->havingRaw('count(*) >= 3')->orderByDesc('total')->limit(15)->get();
 
+        // Avance de cada técnico con los pedidos que tiene como responsable.
+        $tecnicos = $base()->join('users', 'users.id', '=', 'tickets.tecnico_id')
+            ->selectRaw("tecnico_id, users.name, users.especialidad, count(*) total,
+                sum(estado = 'resuelto') resueltos, sum(estado <> 'resuelto') abiertos,
+                sum(estado = 'resuelto' and resuelto_at <= vence_at) en_plazo, sum(reaperturas > 0) reabiertos,
+                avg(case when estado = 'resuelto' then $minutos end) minutos")
+            ->groupBy('tecnico_id', 'users.name', 'users.especialidad')->orderByDesc('resueltos')->orderByDesc('total')->get();
+
         $porSede = $base()->join('sedes', 'sedes.id', '=', 'tickets.sede_id')->selectRaw('sedes.nombre, count(*) total')->groupBy('sedes.nombre')->orderByDesc('total')->pluck('total', 'nombre');
         $porCanal = $base()->selectRaw('canal, count(*) total')->groupBy('canal')->orderByDesc('total')->pluck('total', 'canal');
 
         if ($tipo = $request->query('csv')) {
-            return $this->csvSeccion($tipo, compact('areas', 'personas', 'frecuente', 'problemas', 'recurrentes'), $desde, $hasta);
+            return $this->csvSeccion($tipo, compact('areas', 'personas', 'frecuente', 'problemas', 'recurrentes', 'tecnicos'), $desde, $hasta);
         }
 
-        return view('reportes.index', compact('resumen', 'areas', 'personas', 'frecuente', 'problemas', 'recurrentes', 'porSede', 'porCanal', 'desde', 'hasta') + [
+        return view('reportes.index', compact('resumen', 'areas', 'personas', 'frecuente', 'problemas', 'recurrentes', 'tecnicos', 'porSede', 'porCanal', 'desde', 'hasta') + [
             'sedes' => Sede::orderBy('nombre')->get(),
         ]);
     }
@@ -80,6 +89,7 @@ class ReporteController extends Controller
             ->when($request->query('area'), fn ($w, $v) => $w->where('tickets.area_id', $v))
             ->when($request->query('solicitante'), fn ($w, $v) => $w->where('solicitante_id', $v))
             ->when($request->query('categoria'), fn ($w, $v) => $w->where('categoria_id', $v))
+            ->when($request->query('tecnico'), fn ($w, $v) => $w->where('tecnico_id', $v))
             ->latest('tickets.id');
 
         if ($request->boolean('csv')) {
@@ -91,6 +101,7 @@ class ReporteController extends Controller
         $titulo = match (true) {
             (bool) $request->query('area') => 'Pedidos del área '.optional(Area::find($request->query('area')))->nombre,
             (bool) $request->query('solicitante') => 'Pedidos de '.optional(Solicitante::find($request->query('solicitante')))->nombre,
+            (bool) $request->query('tecnico') => 'Pedidos atendidos por '.optional(User::find($request->query('tecnico')))->name,
             (bool) $request->query('categoria') => 'Pedidos de «'.optional(Categoria::find($request->query('categoria')))->nombre.'»',
             default => 'Todos los pedidos',
         };
@@ -130,6 +141,8 @@ class ReporteController extends Controller
                 $d['problemas']->map(fn ($r) => [$r->nombre, Categoria::ESPECIALIDADES[$r->especialidad] ?? $r->especialidad, $r->total, $r->resueltos, $r->remotos, $r->reabiertos, $h($r->minutos)]), $desde, $hasta),
             'recurrentes' => $this->csv('recurrentes', ['Sede', 'Área', 'Problema', 'Veces', 'Último'],
                 $d['recurrentes']->map(fn ($r) => [$r->sede, $r->area, $r->problema, $r->total, $r->ultimo]), $desde, $hasta),
+            'tecnicos' => $this->csv('tecnicos', ['Técnico', 'Especialidad', 'Asignados', 'Resueltos', 'Abiertos', 'En plazo', 'Reabiertos', 'Horas prom. solución'],
+                $d['tecnicos']->map(fn ($r) => [$r->name, Categoria::ESPECIALIDADES[$r->especialidad] ?? $r->especialidad, $r->total, $r->resueltos, $r->abiertos, $r->en_plazo, $r->reabiertos, $h($r->minutos)]), $desde, $hasta),
             default => abort(404),
         };
     }

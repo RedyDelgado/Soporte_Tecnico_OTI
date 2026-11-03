@@ -110,4 +110,24 @@ class PortalTest extends TestCase
         $this->actingAs($jefe)->get("/reportes/detalle?area={$area->id}")->assertOk()->assertSee('Atasco de papel');
         $this->actingAs($jefe)->get("/reportes/detalle?solicitante={$p->id}&csv=1")->assertOk();
     }
+
+    public function test_tecnico_ve_su_avance_y_el_de_sus_companeros(): void
+    {
+        $jefe = User::where('rol', 'jefe')->first();
+        [$yo, $otro] = User::where('rol', 'tecnico')->take(2)->get();
+        $area = Area::create(['sede_id' => 1, 'nombre' => 'Caja']);
+        $p = Solicitante::create(['nombre' => 'Eva Ccori', 'area_id' => $area->id]);
+        $cat = Categoria::first();
+        foreach ([$yo, $otro, $otro] as $tecnico) {
+            $t = Ticket::create(['sede_id' => 1, 'area_id' => $area->id, 'solicitante_id' => $p->id, 'canal' => 'llamada',
+                'categoria_id' => $cat->id, 'prioridad' => 'media', 'descripcion' => 'Sin red', 'creado_por' => $jefe->id]);
+            $t->tecnico_id = $tecnico->id;
+            $t->save();
+        }
+
+        $this->actingAs($yo)->get('/reportes')->assertOk()
+            ->assertSee('Avance del equipo técnico')->assertSeeInOrder([$otro->name, $yo->name, '(tú)']);
+        $this->actingAs($yo)->get('/reportes?csv=tecnicos')->assertOk();
+        $this->actingAs($yo)->get("/reportes/detalle?tecnico={$otro->id}")->assertOk()->assertSee('Pedidos atendidos por '.$otro->name);
+    }
 }
