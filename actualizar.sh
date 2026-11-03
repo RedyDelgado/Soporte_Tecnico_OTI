@@ -7,8 +7,12 @@ cd "$(dirname "$0")"
 PERFIL=()
 grep -q '^OTI_HTTPS_CADDY=1' .env && PERFIL=(--profile https)
 
+echo "==> Respaldando .env"
+cp -p .env ".env.respaldo-$(date +%F-%H%M)"
+
 echo "==> Descargando cambios"
 git pull --ff-only
+sed -i 's|^APP_NAME=.*|APP_NAME="Soporte OTI"|' .env
 
 echo "==> Reconstruyendo y reiniciando (las migraciones se aplican al iniciar)"
 docker compose ${PERFIL[@]+"${PERFIL[@]}"} up -d --build
