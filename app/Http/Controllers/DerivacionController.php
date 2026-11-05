@@ -7,8 +7,10 @@ use App\Models\User;
 use App\Notifications\AvisoDerivacion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DerivacionController extends Controller
 {
@@ -36,7 +38,11 @@ class DerivacionController extends Controller
             'asignado_a' => ['required', Rule::exists('users', 'id')->where(fn ($q) => $this->especialistas($q))],
             'nro_proveido' => 'required|max:50',
             'descripcion' => 'required|max:2000',
+            'documento' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
         ]);
+        if ($request->hasFile('documento')) {
+            $data['documento'] = $request->file('documento')->store('derivaciones', 'local');
+        }
 
         $derivacion = Derivacion::create($data + ['asignado_por' => $request->user()->id]);
 
@@ -57,6 +63,17 @@ class DerivacionController extends Controller
         $derivacion->cerrar($request->user(), $request->resolucion);
 
         return back()->with('ok', "Proveído {$derivacion->nro_proveido} cerrado");
+    }
+
+    /** El escaneo se sirve desde el disco privado solo a quien puede ver la derivación. */
+    public function documento(Request $request, Derivacion $derivacion): StreamedResponse
+    {
+        abort_unless($derivacion->puedeVer($request->user()), 403);
+        abort_unless($derivacion->documento && Storage::disk('local')->exists($derivacion->documento), 404);
+
+        $extension = pathinfo($derivacion->documento, PATHINFO_EXTENSION);
+
+        return Storage::disk('local')->response($derivacion->documento, "Proveido-{$derivacion->nro_proveido}.{$extension}");
     }
 
     /** Especialistas activos: técnicos con especialidad. Sirve como consulta de User o como filtro de la regla exists. */

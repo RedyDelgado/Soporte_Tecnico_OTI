@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y libgmp-dev libzip-dev unzip libjpeg62-t
     && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install pdo_mysql gmp zip gd \
     && a2enmod rewrite \
+    && printf 'upload_max_filesize=12M\npost_max_size=40M\n' > /usr/local/etc/php/conf.d/subidas.ini \
     && sed -i 's#/var/www/html#/var/www/html/public#' /etc/apache2/sites-available/000-default.conf \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

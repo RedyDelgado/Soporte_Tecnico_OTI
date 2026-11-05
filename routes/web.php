@@ -54,6 +54,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/reportes/detalle', [ReporteController::class, 'detalle'])->name('reportes.detalle');
         Route::post('/categorias', [CategoriaController::class, 'store'])->name('categorias.store');
         Route::get('/derivaciones', [DerivacionController::class, 'index'])->name('derivaciones.index');
+        Route::get('/derivaciones/{derivacion}/documento', [DerivacionController::class, 'documento'])->name('derivaciones.documento');
         Route::post('/derivaciones/{derivacion}/cerrar', [DerivacionController::class, 'cerrar'])->name('derivaciones.cerrar');
     });
 

@@ -6,7 +6,9 @@ use App\Models\Derivacion;
 use App\Models\User;
 use App\Notifications\AvisoDerivacion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class DerivacionTest extends TestCase
@@ -54,6 +56,29 @@ class DerivacionTest extends TestCase
         $this->assertSame('abierta', $derivacion->fresh()->estado);
         $this->actingAs($carmen)->get('/derivaciones')->assertOk()->assertDontSee('PROV-099-2026');
         $this->actingAs($carmen)->post('/derivaciones', ['asignado_a' => $carmen->id, 'nro_proveido' => 'X', 'descripcion' => 'X'])->assertForbidden();
+    }
+
+    public function test_el_documento_escaneado_solo_lo_ven_mesa_jefe_y_el_asignado(): void
+    {
+        Storage::fake('local');
+        Notification::fake();
+        $luis = $this->usuario('luis@oti.local');
+
+        $this->actingAs($this->usuario('mesa@oti.local'))->post('/derivaciones', [
+            'asignado_a' => $luis->id, 'nro_proveido' => 'PROV-020-2026', 'descripcion' => 'Instalar proyector',
+            'documento' => UploadedFile::fake()->create('proveido.pdf', 300, 'application/pdf'),
+        ])->assertSessionHasNoErrors();
+        $derivacion = Derivacion::firstOrFail();
+        Storage::disk('local')->assertExists($derivacion->documento);
+
+        $this->actingAs($luis)->get("/derivaciones/{$derivacion->id}/documento")->assertOk();
+        $this->actingAs($this->usuario('jefe@oti.local'))->get("/derivaciones/{$derivacion->id}/documento")->assertOk();
+        $this->actingAs($this->usuario('carmen@oti.local'))->get("/derivaciones/{$derivacion->id}/documento")->assertForbidden();
+
+        $this->actingAs($this->usuario('mesa@oti.local'))->post('/derivaciones', [
+            'asignado_a' => $luis->id, 'nro_proveido' => 'PROV-021-2026', 'descripcion' => 'X',
+            'documento' => UploadedFile::fake()->create('virus.exe', 10),
+        ])->assertSessionHasErrors('documento');
     }
 
     public function test_solo_se_deriva_a_especialistas(): void

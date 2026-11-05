@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['asignado_a', 'asignado_por', 'nro_proveido', 'descripcion'])]
+#[Fillable(['asignado_a', 'asignado_por', 'nro_proveido', 'descripcion', 'documento'])]
 class Derivacion extends Model
 {
     /** @use HasFactory<DerivacionFactory> */
@@ -36,6 +36,12 @@ class Derivacion extends Model
     public function cerrador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cerrada_por');
+    }
+
+    /** La mesa, el jefe y el especialista asignado. */
+    public function puedeVer(User $user): bool
+    {
+        return $user->puedeAsignar() || $this->asignado_a === $user->id;
     }
 
     /** Solo el especialista asignado o el jefe la cierran, y una sola vez. */

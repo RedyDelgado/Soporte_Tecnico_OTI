@@ -27,7 +27,12 @@
                 <tbody>
                     @forelse ($derivaciones as $d)
                         <tr>
-                            <td class="whitespace-nowrap font-mono font-semibold text-neutral-900">{{ $d->nro_proveido }}</td>
+                            <td class="whitespace-nowrap">
+                                <span class="font-mono font-semibold text-neutral-900">{{ $d->nro_proveido }}</span>
+                                @if ($d->documento)
+                                    <a href="{{ route('derivaciones.documento', $d) }}" target="_blank" class="link mt-1 flex items-center gap-1 text-xs"><i class="ti ti-file-text"></i>Ver documento</a>
+                                @endif
+                            </td>
                             <td class="max-w-md">
                                 <p class="whitespace-pre-line text-neutral-900">{{ $d->descripcion }}</p>
                                 @if ($d->estado === 'cerrada')
@@ -59,7 +64,7 @@
 
     @if ($puedeAsignar)
         <x-modal id="modal-derivar" titulo="Nueva derivación">
-            <form method="POST" action="{{ route('derivaciones.store') }}" class="space-y-4">
+            <form method="POST" action="{{ route('derivaciones.store') }}" enctype="multipart/form-data" class="space-y-4">
                 @csrf
                 <div>
                     <label class="label" for="d-especialista">Especialista</label>
@@ -77,6 +82,12 @@
                 <div>
                     <label class="label" for="d-descripcion">Trabajo a realizar</label>
                     <textarea id="d-descripcion" name="descripcion" rows="3" class="input" required maxlength="2000">{{ old('descripcion') }}</textarea>
+                </div>
+                <div>
+                    <label class="label" for="d-documento">Documento escaneado <span class="font-normal muted">(opcional)</span></label>
+                    <input id="d-documento" type="file" name="documento" accept="application/pdf,image/*" class="input file:mr-3 file:rounded-md file:border-0 file:bg-neutral-100 file:px-2.5 file:py-1 file:text-sm">
+                    <p class="mt-1 text-xs muted">PDF o foto del proveído, hasta 10 MB. En el celular puedes tomar la foto directamente.</p>
+                    @error('documento')<p class="error">{{ $message }}</p>@enderror
                 </div>
                 <div class="flex justify-end gap-2 border-t border-neutral-100 pt-4">
                     <button type="button" class="btn" onclick="this.closest('dialog').close()">Cancelar</button>
