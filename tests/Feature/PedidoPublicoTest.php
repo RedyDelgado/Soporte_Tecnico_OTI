@@ -47,7 +47,9 @@ class PedidoPublicoTest extends TestCase
         $r->assertRedirect(route('seguimiento', $t->token));
 
         $this->assertSame(['por_validar', 'formulario', 'Por clasificar', null], [$t->estado, $t->canal, $t->categoria->nombre, $t->creado_por]);
-        $this->assertSame('Biblioteca central', $t->area->nombre);
+        // Escribió un área que ya está en la lista: se reutiliza, no se duplica.
+        $this->assertSame('Biblioteca Central', $t->area->nombre);
+        $this->assertSame(1, Area::where('sede_id', $t->sede_id)->where('nombre', 'Biblioteca Central')->count());
         $this->assertSame('juana@gmail.com', $t->solicitante->email);
         $this->get("/t/{$t->token}")->assertSee('La mesa de ayuda lo está validando');
 

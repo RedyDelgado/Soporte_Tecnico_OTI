@@ -244,6 +244,37 @@ Alpine.data('categoriaNueva', () => ({
 
 /* ---------- Registro de pedido: persona + sede + área ---------- */
 
+// Combobox de áreas: lee areas / area_id del x-data padre. El texto siempre vuelve al área elegida al cerrar.
+const sinTildes = (t) => t.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+Alpine.data('comboArea', () => ({
+    abierto: false,
+    q: '',
+    idx: 0,
+    init() {
+        this.$watch('area_id', () => this.cerrar());
+        this.$watch('sede_id', () => this.cerrar());
+        this.cerrar();
+    },
+    get filtradas() {
+        const t = sinTildes(this.q.trim());
+        return this.areas.filter((a) => sinTildes(a.nombre).includes(t));
+    },
+    abrir() {
+        if (!this.abierto) {
+            this.abierto = true;
+            this.q = '';
+        }
+    },
+    cerrar() {
+        this.abierto = false;
+        this.q = this.areas.find((a) => a.id == this.area_id)?.nombre ?? '';
+    },
+    elegir(a) {
+        this.area_id = a.id;
+        this.cerrar();
+    },
+}));
+
 Alpine.data('registro', (sedes, inicial) => ({
     sedes,
     q: '',

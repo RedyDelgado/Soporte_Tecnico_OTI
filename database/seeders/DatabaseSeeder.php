@@ -22,6 +22,28 @@ class DatabaseSeeder extends Seeder
             Sede::firstOrCreate(['nombre' => $s]);
         }
 
+        $areas = ['Rectorado (Presidencia de la Comisión Organizadora)', 'Vicerrectorado Académico', 'Vicerrectorado de Investigación',
+            'Órgano de Control Institucional', 'Oficina de Asesoría Jurídica', 'Oficina de Planeamiento y Presupuesto',
+            'Unidad de Planeamiento, Estadística y Modernización (UPEM)', 'Unidad de Presupuesto', 'Unidad Formuladora',
+            'Oficina de Cooperación y Relaciones Internacionales', 'Oficina de Gestión de la Calidad', 'Oficina de Comunicación e Imagen Institucional',
+            'Oficina de Tecnologías de la Información', 'Dirección General de Administración', 'Unidad de Recursos Humanos',
+            'Unidad de Abastecimiento', 'Unidad de Contabilidad', 'Unidad de Tesorería', 'Unidad de Servicios Generales',
+            'Unidad Ejecutora de Inversiones', 'Secretaría General', 'Unidad de Trámite Documentario y Archivo', 'Unidad de Grados y Títulos',
+            'Dirección de Servicios Académicos', 'Dirección de Admisión', 'Biblioteca Central', 'Dirección de Bienestar Universitario',
+            'Dirección de Responsabilidad Social', 'Dirección de Interculturalidad', 'Unidad de Servicios Educativos de Extensión',
+            'Dirección de Institutos de Investigación', 'Facultad de Gestión y Ciencias Sociales', 'Facultad de Ingenierías',
+            'Departamento Académico de Ciencias Básicas', 'Departamento Académico de Ciencias Sociales', 'Departamento Académico de Ecoturismo',
+            'Departamento Académico de Ingeniería Agronómica Tropical', 'Departamento Académico de Ingeniería Civil',
+            'Departamento Académico de Ingeniería de Alimentos', 'Escuela Profesional de Ingeniería Civil',
+            'Escuela Profesional de Ingeniería Agronómica Tropical', 'Escuela Profesional de Ingeniería de Alimentos',
+            'Escuela Profesional de Ecoturismo', 'Escuela Profesional de Economía', 'Escuela Profesional de Contabilidad',
+            'Unidades de Investigación', 'Unidades de Posgrado', 'Escuela de Posgrado'];
+        foreach (Sede::all() as $sede) {
+            foreach ($areas as $nombre) {
+                Area::firstOrCreate(['sede_id' => $sede->id, 'nombre' => $nombre]);
+            }
+        }
+
         $categorias = [
             'soporte' => ['PC no enciende o lenta' => 'media', 'Impresora o escáner' => 'media', 'Instalación de software' => 'baja',
                 'Correo institucional' => 'media', 'Ofimática y antivirus' => 'baja', 'Cuentas y contraseñas' => 'alta', 'Otros soporte' => 'baja',

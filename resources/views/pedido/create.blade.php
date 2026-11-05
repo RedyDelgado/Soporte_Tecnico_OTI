@@ -47,10 +47,7 @@
                         <label class="label !mb-0" for="area_id">Área u oficina</label>
                         <button type="button" x-show="sede_id" @click="otra = !otra; area_id = ''" class="link text-xs" x-text="otra ? 'Elegir de la lista' : 'No está en la lista'"></button>
                     </div>
-                    <select x-show="!otra" id="area_id" name="area_id" x-model="area_id" class="input" :disabled="!sede_id || otra" :required="!otra">
-                        <option value="" x-text="sede_id ? 'Elegir…' : 'Primero elige la sede'"></option>
-                        <template x-for="a in areas" :key="a.id"><option :value="a.id" x-text="a.nombre" :selected="a.id == area_id"></option></template>
-                    </select>
+                    <x-combo-area x-show="!otra" deshabilitado="!sede_id || otra" requerido="!otra" />
                     <input x-show="otra" x-cloak name="area_nueva" value="{{ old('area_nueva') }}" class="input" :disabled="!otra" :required="otra" maxlength="80" placeholder="Nombre de tu área u oficina">
                     @error('area_id')<p class="error">{{ $message }}</p>@enderror
                 </div>

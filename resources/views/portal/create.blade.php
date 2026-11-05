@@ -30,10 +30,7 @@
                             <label class="label !mb-0" for="area_id">Tu área u oficina</label>
                             <button type="button" x-show="sede_id" @click="$refs.modalArea.showModal()" class="link text-xs"><i class="ti ti-plus"></i> No está</button>
                         </div>
-                        <select id="area_id" name="area_id" x-model="area_id" class="input" required :disabled="!sede_id">
-                            <option value="" x-text="sede_id ? 'Elegir…' : 'Primero elige la sede'"></option>
-                            <template x-for="a in areas" :key="a.id"><option :value="a.id" x-text="a.nombre" :selected="a.id == area_id"></option></template>
-                        </select>
+                        <x-combo-area />
                         @error('area_id')<p class="error">{{ $message }}</p>@enderror
                     </div>
                 </div>
