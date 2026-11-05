@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\DerivacionController;
 use App\Http\Controllers\DirectorioController;
 use App\Http\Controllers\PanelController;
 use App\Http\Controllers\PedidoPublicoController;
@@ -52,6 +53,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes');
         Route::get('/reportes/detalle', [ReporteController::class, 'detalle'])->name('reportes.detalle');
         Route::post('/categorias', [CategoriaController::class, 'store'])->name('categorias.store');
+        Route::get('/derivaciones', [DerivacionController::class, 'index'])->name('derivaciones.index');
+        Route::post('/derivaciones/{derivacion}/cerrar', [DerivacionController::class, 'cerrar'])->name('derivaciones.cerrar');
     });
 
     // Mesa de ayuda y administrador
@@ -64,6 +67,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/tickets/{ticket}/apoyos', [TicketController::class, 'apoyos'])->name('tickets.apoyos');
         Route::post('/tickets/{ticket}/clasificar', [TicketController::class, 'clasificar'])->name('tickets.clasificar');
         Route::post('/tickets/{ticket}/reabrir', [TicketController::class, 'reabrir'])->name('tickets.reabrir');
+        Route::post('/derivaciones', [DerivacionController::class, 'store'])->name('derivaciones.store');
         Route::get('/personas/buscar', [TicketController::class, 'buscarPersona'])->name('personas.buscar');
 
         Route::get('/directorio', [DirectorioController::class, 'index'])->name('directorio');

@@ -12,6 +12,7 @@
             ['tickets.index', 'ti-inbox', 'Bandeja', $personal],
             ['tickets.create', 'ti-circle-plus', 'Nuevo ticket', $u?->puedeAsignar()],
             ['tickets.mios', 'ti-tool', 'Mis tickets', $personal && $u->rol !== 'mesa'],
+            ['derivaciones.index', 'ti-file-arrow-right', 'Derivaciones', $u?->puedeAsignar() || $u?->rol === 'tecnico'],
         ],
         'Consulta' => [
             ['panel', 'ti-chart-bar', 'Panel', $personal],
