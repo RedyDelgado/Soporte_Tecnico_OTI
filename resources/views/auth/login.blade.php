@@ -7,10 +7,8 @@
         <div class="grid w-full gap-4 md:grid-cols-[1.3fr_1fr]">
             {{-- Ingreso con correo UNIQ --}}
             <div class="card p-6 sm:p-8">
-                <img src="/logo.webp" class="mb-4 size-24" alt="Soporte OTI">
-                <h1 class="text-2xl">Soporte OTI</h1>
-                <p class="font-medium text-brand-700">Mesa de ayuda de la OTI</p>
-                <p class="mt-1 muted">Universidad Nacional Intercultural de Quillabamba · Oficina de Tecnologías de la Información</p>
+                <h1><img src="/logo.webp" class="mb-4 size-72 max-w-full" alt="Soporte OTI"></h1>
+                <p class="muted">Universidad Nacional Intercultural de Quillabamba · Oficina de Tecnologías de la Información</p>
 
                 <ol class="mt-6 space-y-3 text-neutral-700">
                     @foreach ([
