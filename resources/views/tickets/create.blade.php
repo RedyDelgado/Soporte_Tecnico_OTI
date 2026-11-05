@@ -69,11 +69,8 @@
                             </select>
                         </div>
                         <div>
-                            <div class="mb-1.5 flex items-center justify-between">
-                                <label class="label !mb-0" for="area_id">Área u oficina</label>
-                                <button type="button" x-show="sede_id" @click="$refs.modalArea.showModal()" class="link text-xs"><i class="ti ti-plus"></i> Nueva área</button>
-                            </div>
-                            <x-combo-area />
+                            <label class="label" for="area_id">Área u oficina</label>
+                            <x-combo-area otro="$refs.modalArea.showModal()" />
                             @error('area_id')<p class="error">{{ $message }}</p>@enderror
                         </div>
                     </div>

@@ -12,6 +12,7 @@
         </div>
 
         <form method="POST" action="{{ route('pedido.publico') }}" enctype="multipart/form-data" class="card"
+              x-init="$watch('area_id', v => { if (v) otra = false })"
               x-data="{ sedes: @js($sedesJs), sede_id: '{{ old('sede_id') }}', area_id: '{{ old('area_id') }}', otra: {{ old('area_nueva') ? 'true' : 'false' }},
                         get areas() { return this.sedes.find(s => s.id == this.sede_id)?.areas ?? [] } }">
             @csrf
@@ -43,12 +44,9 @@
                     </select>
                 </div>
                 <div>
-                    <div class="mb-1 flex items-center justify-between">
-                        <label class="label !mb-0" for="area_id">Área u oficina</label>
-                        <button type="button" x-show="sede_id" @click="otra = !otra; area_id = ''" class="link text-xs" x-text="otra ? 'Elegir de la lista' : 'No está en la lista'"></button>
-                    </div>
-                    <x-combo-area x-show="!otra" deshabilitado="!sede_id || otra" requerido="!otra" />
-                    <input x-show="otra" x-cloak name="area_nueva" value="{{ old('area_nueva') }}" class="input" :disabled="!otra" :required="otra" maxlength="80" placeholder="Nombre de tu área u oficina">
+                    <label class="label" for="area_id">Área u oficina</label>
+                    <x-combo-area otro="otra = true; $nextTick(() => $refs.areaNueva.focus())" otro-activo="otra" />
+                    <input x-show="otra" x-cloak x-ref="areaNueva" name="area_nueva" value="{{ old('area_nueva') }}" class="input mt-2" :disabled="!otra" :required="otra" maxlength="80" placeholder="Nombre de tu área u oficina">
                     @error('area_id')<p class="error">{{ $message }}</p>@enderror
                 </div>
                 <div class="sm:col-span-2">

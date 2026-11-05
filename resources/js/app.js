@@ -244,34 +244,40 @@ Alpine.data('categoriaNueva', () => ({
 
 /* ---------- Registro de pedido: persona + sede + área ---------- */
 
-// Combobox de áreas: lee areas / area_id del x-data padre. El texto siempre vuelve al área elegida al cerrar.
+// Lista de áreas con buscador: lee areas / area_id del x-data padre; "Otro" lo resuelve cada formulario.
 const sinTildes = (t) => t.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 Alpine.data('comboArea', () => ({
     abierto: false,
     q: '',
     idx: 0,
-    init() {
-        this.$watch('area_id', () => this.cerrar());
-        this.$watch('sede_id', () => this.cerrar());
-        this.cerrar();
+    get nombre() {
+        return this.areas.find((a) => a.id == this.area_id)?.nombre;
     },
     get filtradas() {
         const t = sinTildes(this.q.trim());
         return this.areas.filter((a) => sinTildes(a.nombre).includes(t));
     },
     abrir() {
-        if (!this.abierto) {
-            this.abierto = true;
-            this.q = '';
-        }
+        this.abierto = true;
+        this.q = '';
+        this.idx = Math.max(this.filtradas.findIndex((a) => a.id == this.area_id), 0);
+        this.$nextTick(() => this.$refs.buscar.focus());
     },
     cerrar() {
         this.abierto = false;
-        this.q = this.areas.find((a) => a.id == this.area_id)?.nombre ?? '';
+    },
+    mover(paso) {
+        this.idx = Math.min(Math.max(this.idx + paso, 0), this.filtradas.length);
     },
     elegir(a) {
         this.area_id = a.id;
         this.cerrar();
+        this.$refs.boton.focus();
+    },
+    elegirOtro() {
+        this.area_id = '';
+        this.cerrar();
+        this.$refs.otro.dispatchEvent(new CustomEvent('otro-area'));
     },
 }));
 
