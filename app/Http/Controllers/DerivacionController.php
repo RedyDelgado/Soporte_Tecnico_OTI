@@ -55,6 +55,40 @@ class DerivacionController extends Controller
         return back()->with('ok', "Proveído {$derivacion->nro_proveido} derivado a {$derivacion->especialista->name}");
     }
 
+    /** La mesa o el administrador corrigen la derivación en cualquier estado; si ya está cerrada, también su resolución. */
+    public function update(Request $request, Derivacion $derivacion): RedirectResponse
+    {
+        $data = $request->validate([
+            'asignado_a' => ['required', Rule::exists('users', 'id')->where(fn ($q) => $this->especialistas($q))],
+            'nro_proveido' => 'required|max:50',
+            'descripcion' => 'required|max:2000',
+            'documento' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+        ] + ($derivacion->estado === 'cerrada' ? ['resolucion' => 'required|max:2000'] : []));
+
+        if ($request->hasFile('documento')) {
+            $anterior = $derivacion->documento;
+            $data['documento'] = $request->file('documento')->store('derivaciones', 'local');
+        } else {
+            unset($data['documento']);
+        }
+
+        $especialistaAnterior = $derivacion->asignado_a;
+        $derivacion->forceFill($data)->save();
+        if (isset($anterior)) {
+            Storage::disk('local')->delete($anterior);
+        }
+
+        if ($derivacion->estado === 'abierta' && $derivacion->asignado_a !== $especialistaAnterior) {
+            try {
+                $derivacion->load('especialista')->especialista->notify(new AvisoDerivacion($derivacion));
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        return back()->with('ok', "Proveído {$derivacion->nro_proveido} actualizado");
+    }
+
     public function cerrar(Request $request, Derivacion $derivacion): RedirectResponse
     {
         abort_unless($derivacion->puedeCerrar($request->user()), 403);

@@ -56,6 +56,10 @@
                                 @if ($puedeAsignar)
                                     <a href="{{ route('tickets.show', $t) }}#editar" class="ml-1 inline-grid size-7 place-items-center rounded-md text-neutral-400 hover:bg-brand-50 hover:text-brand-700"
                                        title="Editar {{ $t->codigo }}" aria-label="Editar {{ $t->codigo }}"><i class="ti ti-pencil"></i></a>
+                                    @if ($t->tecnico_id && in_array($t->estado, \App\Models\Ticket::ABIERTOS))
+                                        <a href="{{ route('tickets.show', $t) }}#cerrar" class="inline-grid size-7 place-items-center rounded-md text-neutral-400 hover:bg-brand-50 hover:text-brand-700"
+                                           title="Cerrar {{ $t->codigo }}" aria-label="Cerrar {{ $t->codigo }}"><i class="ti ti-lock"></i></a>
+                                    @endif
                                 @endif
                             </td>
                             <td class="max-w-80">

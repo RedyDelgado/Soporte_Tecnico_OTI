@@ -64,6 +64,9 @@
                         <form method="POST" action="{{ route('tickets.estado', $t) }}">@csrf<input type="hidden" name="estado" value="en_atencion">
                             <button class="btn btn-primary"><i class="ti ti-tool"></i>Empecé la atención</button></form>
                     @endif
+                    @if ($responsable)
+                        <button type="button" class="btn" onclick="document.getElementById('modal-resolver').showModal()"><i class="ti ti-lock"></i>Cerrar ticket</button>
+                    @endif
                     @if ($t->tecnico_id === $u->id && in_array($t->estado, \App\Models\Ticket::ABIERTOS))
                         <button type="button" class="btn" onclick="document.getElementById('modal-devolver').showModal()"><i class="ti ti-arrow-back-up"></i>Devolver a la cola</button>
                     @endif
@@ -90,11 +93,10 @@
             @endif
 
             @if ($responsable)
-                <form method="POST" action="{{ route('tickets.resolver', $t) }}" enctype="multipart/form-data" class="card" id="resolver"
-                      data-confirmar="¿Cerrar {{ $t->codigo }} como resuelto? Se avisará a la mesa de ayuda." data-confirmar-boton="Sí, cerrar ticket">
-                    @csrf
-                    <div class="card-header"><i class="ti ti-checklist text-lg text-brand-600"></i><span class="card-title">Cerrar atención</span></div>
-                    <div class="space-y-4 p-4">
+                <x-modal id="modal-resolver" titulo="Cerrar {{ $t->codigo }}">
+                    <form method="POST" action="{{ route('tickets.resolver', $t) }}" enctype="multipart/form-data" class="space-y-4"
+                          data-confirmar="¿Cerrar {{ $t->codigo }} como resuelto? Se avisará a la mesa de ayuda." data-confirmar-boton="Sí, cerrar ticket">
+                        @csrf
                         @include('tickets._categoria', ['actual' => $t->categoria_id])
                         <div>
                             <label class="label" for="diagnostico">Problema encontrado</label>
@@ -118,11 +120,14 @@
                         </fieldset>
                         <x-fotos etiqueta="Fotos de la atención" />
                         @error('fotos.*')<p class="error">{{ $message }}</p>@enderror
-                    </div>
-                    <div class="flex justify-end rounded-b-xl border-t border-neutral-100 bg-neutral-50/60 px-4 py-2.5">
-                        <button class="btn btn-primary"><i class="ti ti-circle-check"></i>Marcar como resuelto</button>
-                    </div>
-                </form>
+                        <div class="flex justify-end gap-2 border-t border-neutral-100 pt-4">
+                            <button type="button" class="btn" onclick="this.closest('dialog').close()">Cancelar</button>
+                            <button class="btn btn-primary"><i class="ti ti-lock"></i>Marcar como resuelto</button>
+                        </div>
+                    </form>
+                </x-modal>
+                {{-- El candado de la bandeja llega con #cerrar. --}}
+                <script>document.addEventListener('DOMContentLoaded', () => { if (@js($errors->hasAny(['diagnostico', 'solucion', 'modalidad', 'fotos.*'])) || location.hash === '#cerrar') document.getElementById('modal-resolver').showModal() })</script>
             @endif
         </div>
 

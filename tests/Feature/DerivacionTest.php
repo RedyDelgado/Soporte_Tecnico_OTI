@@ -81,6 +81,27 @@ class DerivacionTest extends TestCase
         ])->assertSessionHasErrors('documento');
     }
 
+    public function test_mesa_edita_la_derivacion_y_el_especialista_no(): void
+    {
+        Notification::fake();
+        $luis = $this->usuario('luis@oti.local');
+        $carmen = $this->usuario('carmen@oti.local');
+        $derivacion = Derivacion::factory()->create(['asignado_a' => $luis->id, 'nro_proveido' => 'PROV-030-2026']);
+        $cambios = ['asignado_a' => $carmen->id, 'nro_proveido' => 'PROV-031-2026', 'descripcion' => 'Instalar proyector en el aula 3'];
+
+        $this->actingAs($luis)->put("/derivaciones/{$derivacion->id}", $cambios)->assertForbidden();
+        $this->actingAs($this->usuario('mesa@oti.local'))->put("/derivaciones/{$derivacion->id}", $cambios)->assertSessionHasNoErrors();
+
+        $this->assertSame([$carmen->id, 'PROV-031-2026'], [$derivacion->fresh()->asignado_a, $derivacion->fresh()->nro_proveido]);
+        Notification::assertSentTo($carmen, AvisoDerivacion::class);
+
+        // Cerrada, también se corrige su resolución.
+        $derivacion->cerrar($carmen, 'Listo');
+        $this->actingAs($this->usuario('jefe@oti.local'))->put("/derivaciones/{$derivacion->id}", $cambios + ['resolucion' => 'Se instaló y probó el proyector'])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('Se instaló y probó el proyector', $derivacion->fresh()->resolucion);
+    }
+
     public function test_solo_se_deriva_a_especialistas(): void
     {
         $this->actingAs($this->usuario('mesa@oti.local'))

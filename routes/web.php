@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
         Route::post('/tickets/{ticket}/reabrir', [TicketController::class, 'reabrir'])->name('tickets.reabrir');
         Route::post('/derivaciones', [DerivacionController::class, 'store'])->name('derivaciones.store');
+        Route::put('/derivaciones/{derivacion}', [DerivacionController::class, 'update'])->name('derivaciones.update');
         Route::get('/personas/buscar', [TicketController::class, 'buscarPersona'])->name('personas.buscar');
 
         Route::get('/directorio', [DirectorioController::class, 'index'])->name('directorio');
