@@ -70,7 +70,8 @@ class PortalTest extends TestCase
         // La mesa lo clasifica y el plazo se recalcula.
         $mesa = User::where('rol', 'mesa')->first();
         $cat = Categoria::where('nombre', 'Sin internet')->first();
-        $this->actingAs($mesa)->post("/tickets/{$t->id}/clasificar", ['categoria_id' => $cat->id, 'prioridad' => 'alta'])->assertRedirect();
+        $this->actingAs($mesa)->put("/tickets/{$t->id}", ['categoria_id' => $cat->id, 'prioridad' => 'alta']
+            + $t->only('sede_id', 'area_id', 'canal', 'descripcion'))->assertRedirect();
         $this->assertEqualsWithDelta(4 * 3600, $t->fresh()->created_at->diffInSeconds($t->fresh()->vence_at), 5);
     }
 

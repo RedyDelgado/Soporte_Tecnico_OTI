@@ -66,7 +66,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/tickets/{ticket}/validar', [TicketController::class, 'validar'])->name('tickets.validar');
         Route::post('/tickets/{ticket}/rechazar', [TicketController::class, 'rechazar'])->name('tickets.rechazar');
         Route::post('/tickets/{ticket}/apoyos', [TicketController::class, 'apoyos'])->name('tickets.apoyos');
-        Route::post('/tickets/{ticket}/clasificar', [TicketController::class, 'clasificar'])->name('tickets.clasificar');
+        Route::put('/tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
         Route::post('/tickets/{ticket}/reabrir', [TicketController::class, 'reabrir'])->name('tickets.reabrir');
         Route::post('/derivaciones', [DerivacionController::class, 'store'])->name('derivaciones.store');
         Route::get('/personas/buscar', [TicketController::class, 'buscarPersona'])->name('personas.buscar');

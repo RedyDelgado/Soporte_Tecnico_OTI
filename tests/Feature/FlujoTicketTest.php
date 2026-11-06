@@ -59,6 +59,18 @@ class FlujoTicketTest extends TestCase
         $this->assertSame('cumplido', $t->semaforo());
         $this->assertSame(['resuelto', 'en_atencion', 'asignado', 'pendiente'], $t->eventos->pluck('estado')->all());
 
+        // Aun resuelto, la mesa corrige el ticket y su informe; el técnico no puede editarlo.
+        $edicion = [
+            'sede_id' => 1, 'area_id' => $caja->id, 'canal' => 'llamada', 'categoria_id' => $cat->id, 'prioridad' => 'alta',
+            'descripcion' => 'No puede entrar al SIAF ni al correo', 'diagnostico' => 'Contraseña vencida en el SIAF',
+            'solucion' => 'Se restableció la clave del SIAF y del correo', 'modalidad' => 'remota',
+        ];
+        $this->actingAs($luis)->put("/tickets/{$t->id}", $edicion)->assertForbidden();
+        $this->actingAs($mesa)->put("/tickets/{$t->id}", $edicion)->assertRedirect();
+        $t->refresh();
+        $this->assertSame(['llamada', 'Se restableció la clave del SIAF y del correo'], [$t->canal, $t->solucion]);
+        $this->assertSame('Editado: canal, descripción, solución', $t->eventos->first()->nota);
+
         // La mesa puede reabrir.
         $this->actingAs($mesa)->post("/tickets/{$t->id}/reabrir", ['motivo' => 'Volvió a fallar'])->assertRedirect();
         $this->assertSame(1, $t->fresh()->reaperturas);

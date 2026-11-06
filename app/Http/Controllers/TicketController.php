@@ -98,6 +98,7 @@ class TicketController extends Controller
             'ticket' => $ticket->load('sede', 'area', 'solicitante.area', 'categoria', 'tecnico', 'apoyos', 'eventos.user', 'fotos'),
             'tecnicos' => $this->tecnicos(),
             'categorias' => Categoria::where('activa', true)->orderBy('nombre')->get(),
+            'sedes' => Sede::with('areas')->orderBy('nombre')->get(),
         ]);
     }
 
@@ -147,20 +148,42 @@ class TicketController extends Controller
         return back()->with('ok', $ids->isEmpty() ? 'Se quitó el apoyo' : 'Equipo actualizado');
     }
 
-    /** La mesa corrige categoría y prioridad (p. ej. pedidos del portal "Por clasificar"); el plazo se recalcula. */
-    public function clasificar(Request $request, Ticket $ticket)
+    /**
+     * La mesa o el administrador corrigen el ticket en cualquier estado. Si cambia la prioridad, el plazo se recalcula.
+     * En los resueltos también se puede corregir el informe de atención.
+     */
+    public function update(Request $request, Ticket $ticket)
     {
-        abort_if(in_array($ticket->estado, ['resuelto', 'rechazado']), 403);
+        $resuelto = $ticket->estado === 'resuelto';
         $data = $request->validate([
+            'sede_id' => 'required|exists:sedes,id',
+            'area_id' => ['required', Rule::exists('areas', 'id')->where('sede_id', $request->sede_id)],
+            'canal' => 'required|in:'.implode(',', array_keys(Ticket::CANALES)),
             'categoria_id' => 'required|exists:categorias,id',
             'prioridad' => 'required|in:'.implode(',', array_keys(Ticket::SLA_HORAS)),
-        ]);
+            'descripcion' => 'required|max:2000',
+        ] + ($resuelto ? [
+            'diagnostico' => 'required|min:10|max:2000',
+            'solucion' => 'required|min:10|max:2000',
+            'modalidad' => 'required|in:remota,presencial',
+        ] : []));
 
-        $ticket->fill($data);
-        $ticket->vence_at = $ticket->created_at->copy()->addHours(Ticket::SLA_HORAS[$data['prioridad']]);
+        $ticket->forceFill($data);
+        if ($ticket->isDirty('prioridad')) {
+            $ticket->vence_at = $ticket->created_at->copy()->addHours(Ticket::SLA_HORAS[$data['prioridad']]);
+        }
+        $cambios = array_keys($ticket->getDirty());
+        if (! $cambios) {
+            return back()->with('ok', 'Sin cambios');
+        }
         $ticket->save();
 
-        return back()->with('ok', 'Clasificación actualizada');
+        $nombres = ['sede_id' => 'sede', 'area_id' => 'área', 'canal' => 'canal', 'categoria_id' => 'categoría', 'prioridad' => 'prioridad',
+            'descripcion' => 'descripción', 'diagnostico' => 'problema encontrado', 'solucion' => 'solución', 'modalidad' => 'modalidad'];
+        $ticket->eventos()->create(['user_id' => $request->user()->id, 'estado' => $ticket->estado,
+            'nota' => 'Editado: '.collect($cambios)->map(fn ($c) => $nombres[$c] ?? null)->filter()->implode(', ')]);
+
+        return back()->with('ok', 'Ticket actualizado');
     }
 
     public function estado(Request $request, Ticket $ticket)

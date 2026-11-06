@@ -146,27 +146,94 @@
                     <p class="text-sm">{{ $t->motivo_rechazo }}</p>
                 </div>
             @endif
-            @if ($u->puedeAsignar() && ! in_array($t->estado, ['resuelto', 'rechazado']))
-                <form method="POST" action="{{ route('tickets.clasificar', $t) }}" class="card p-4 space-y-3">
-                    @csrf
-                    <div class="flex items-center gap-2">
-                        <span class="card-title">Clasificación</span>
-                        @if ($t->categoria->nombre === 'Por clasificar')<span class="badge border-warn-200 bg-warn-50 text-warn-700">Pendiente</span>@endif
+            @if ($u->puedeAsignar())
+                <div class="card p-4">
+                    <div class="mb-1 flex items-center gap-2">
+                        <span class="card-title">Datos del ticket</span>
+                        @if ($t->categoria->nombre === 'Por clasificar')<span class="badge border-warn-200 bg-warn-50 text-warn-700">Por clasificar</span>@endif
                     </div>
-                    <select name="categoria_id" class="input" aria-label="Categoría">
-                        @foreach ($categorias->groupBy('especialidad') as $esp => $grupo)
-                            <optgroup label="{{ \App\Models\Categoria::ESPECIALIDADES[$esp] }}">
-                                @foreach ($grupo as $c)<option value="{{ $c->id }}" @selected($t->categoria_id === $c->id)>{{ $c->nombre }}</option>@endforeach
-                            </optgroup>
-                        @endforeach
-                    </select>
-                    <div class="flex gap-2">
-                        <select name="prioridad" class="input" aria-label="Prioridad">
-                            @foreach (['alta' => 'Alta · 4 h', 'media' => 'Media · 24 h', 'baja' => 'Baja · 72 h'] as $k => $v)<option value="{{ $k }}" @selected($t->prioridad === $k)>{{ $v }}</option>@endforeach
-                        </select>
-                        <button class="btn"><i class="ti ti-device-floppy"></i>Guardar</button>
-                    </div>
-                </form>
+                    <p class="mb-3 text-sm muted">Corrige sede, área, canal, categoría, prioridad o descripción{{ $t->estado === 'resuelto' ? ', y el informe de atención' : '' }}.</p>
+                    <button type="button" class="btn w-full" onclick="document.getElementById('modal-editar').showModal()"><i class="ti ti-pencil"></i>Editar ticket</button>
+                </div>
+                @php($sedesJs = $sedes->map(fn ($s) => ['id' => $s->id, 'nombre' => $s->nombre, 'areas' => $s->areas->map->only('id', 'nombre')->values()]))
+                <x-modal id="modal-editar" titulo="Editar {{ $t->codigo }}">
+                    <form method="POST" action="{{ route('tickets.update', $t) }}" class="space-y-4"
+                          x-data="{ sedes: @js($sedesJs), sede_id: '{{ old('sede_id', $t->sede_id) }}', area_id: '{{ old('area_id', $t->area_id) }}' }">
+                        @csrf
+                        @method('PUT')
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="label" for="e-sede">Sede</label>
+                                <select id="e-sede" name="sede_id" x-model="sede_id" @change="area_id = ''" class="input" required>
+                                    @foreach ($sedes as $s)<option value="{{ $s->id }}">{{ $s->nombre }}</option>@endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label" for="e-area">Área u oficina</label>
+                                <select id="e-area" name="area_id" x-model="area_id" class="input" required>
+                                    <option value="">Elegir área</option>
+                                    <template x-for="a in sedes.find(s => s.id == sede_id)?.areas ?? []" :key="a.id">
+                                        <option :value="a.id" x-text="a.nombre" :selected="a.id == area_id"></option>
+                                    </template>
+                                </select>
+                                @error('area_id')<p class="error">{{ $message }}</p>@enderror
+                            </div>
+                            <div>
+                                <label class="label" for="e-canal">Canal</label>
+                                <select id="e-canal" name="canal" class="input" required>
+                                    @foreach (\App\Models\Ticket::CANALES as $k => $v)<option value="{{ $k }}" @selected(old('canal', $t->canal) === $k)>{{ $v }}</option>@endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label" for="e-prioridad">Prioridad</label>
+                                <select id="e-prioridad" name="prioridad" class="input" required>
+                                    @foreach (['alta' => 'Alta · 4 h', 'media' => 'Media · 24 h', 'baja' => 'Baja · 72 h'] as $k => $v)<option value="{{ $k }}" @selected(old('prioridad', $t->prioridad) === $k)>{{ $v }}</option>@endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="label" for="e-categoria">Categoría</label>
+                            <select id="e-categoria" name="categoria_id" class="input" required>
+                                @foreach ($categorias->groupBy('especialidad') as $esp => $grupo)
+                                    <optgroup label="{{ \App\Models\Categoria::ESPECIALIDADES[$esp] }}">
+                                        @foreach ($grupo as $c)<option value="{{ $c->id }}" @selected(old('categoria_id', $t->categoria_id) == $c->id)>{{ $c->nombre }}</option>@endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label" for="e-descripcion">Descripción</label>
+                            <textarea id="e-descripcion" name="descripcion" rows="2" class="input" required maxlength="2000">{{ old('descripcion', $t->descripcion) }}</textarea>
+                            @error('descripcion')<p class="error">{{ $message }}</p>@enderror
+                        </div>
+                        @if ($t->estado === 'resuelto')
+                            <div>
+                                <label class="label" for="e-diagnostico">Problema encontrado</label>
+                                <textarea id="e-diagnostico" name="diagnostico" rows="2" class="input" required minlength="10" maxlength="2000">{{ old('diagnostico', $t->diagnostico) }}</textarea>
+                                @error('diagnostico')<p class="error">{{ $message }}</p>@enderror
+                            </div>
+                            <div>
+                                <label class="label" for="e-solucion">Cómo se solucionó</label>
+                                <textarea id="e-solucion" name="solucion" rows="2" class="input" required minlength="10" maxlength="2000">{{ old('solucion', $t->solucion) }}</textarea>
+                                @error('solucion')<p class="error">{{ $message }}</p>@enderror
+                            </div>
+                            <div>
+                                <label class="label" for="e-modalidad">Modalidad</label>
+                                <select id="e-modalidad" name="modalidad" class="input" required>
+                                    @foreach (['presencial' => 'Presencial', 'remota' => 'Remota'] as $k => $v)<option value="{{ $k }}" @selected(old('modalidad', $t->modalidad) === $k)>{{ $v }}</option>@endforeach
+                                </select>
+                            </div>
+                        @endif
+                        <p class="text-xs muted">Si cambias la prioridad, el plazo se recalcula desde que se registró el pedido. El cambio queda en la bitácora.</p>
+                        <div class="flex justify-end gap-2 border-t border-neutral-100 pt-4">
+                            <button type="button" class="btn" onclick="this.closest('dialog').close()">Cancelar</button>
+                            <button class="btn btn-primary"><i class="ti ti-device-floppy"></i>Guardar cambios</button>
+                        </div>
+                    </form>
+                </x-modal>
+                @if ($errors->hasAny(['sede_id', 'area_id', 'canal', 'prioridad', 'descripcion']) || ($t->estado === 'resuelto' && $errors->hasAny(['diagnostico', 'solucion'])))
+                    <script>document.addEventListener('DOMContentLoaded', () => document.getElementById('modal-editar').showModal())</script>
+                @endif
             @endif
             @if ($u->puedeAsignar() && in_array($t->estado, \App\Models\Ticket::ABIERTOS))
                 <form method="POST" action="{{ route('tickets.asignar', $t) }}" class="card p-4"
