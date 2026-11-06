@@ -22,7 +22,7 @@
             <div class="grid gap-4 p-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
                     <label class="label" for="nombre">Nombre completo</label>
-                    <input id="nombre" name="nombre" value="{{ old('nombre') }}" class="input" required maxlength="120" autocomplete="name" placeholder="María Quispe Huamán">
+                    <input id="nombre" name="nombre" value="{{ old('nombre') }}" class="input" required maxlength="120" autocomplete="name" placeholder="Nombre Apellido">
                     @error('nombre')<p class="error">{{ $message }}</p>@enderror
                 </div>
                 <div>

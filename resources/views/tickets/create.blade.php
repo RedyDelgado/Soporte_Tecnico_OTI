@@ -28,7 +28,7 @@
                         <label class="label" for="buscador">Buscar persona por nombre o celular</label>
                         <div class="relative">
                             <i class="ti ti-search absolute top-1/2 left-3 -translate-y-1/2 muted"></i>
-                            <input id="buscador" x-ref="buscador" x-model="q" @input="buscar" class="input !pl-9" placeholder="Ana Quispe o 984111222" autocomplete="off">
+                            <input id="buscador" x-ref="buscador" x-model="q" @input="buscar" class="input !pl-9" placeholder="Nombre o celular" autocomplete="off">
                             <span x-show="buscando" class="spinner absolute top-2.5 right-3 text-brand-500"></span>
                         </div>
                         <div x-show="q.trim().length >= 2 && !buscando" x-cloak class="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg shadow-neutral-900/10">
@@ -53,7 +53,7 @@
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
                             <label class="label" for="nombre">Nombre completo</label>
-                            <input id="nombre" name="nombre" x-ref="nombre" x-model="nombre" class="input" required placeholder="María Quispe Huamán">
+                            <input id="nombre" name="nombre" x-ref="nombre" x-model="nombre" class="input" required placeholder="Nombre Apellido">
                             @error('nombre')<p class="error">{{ $message }}</p>@enderror
                         </div>
                         <div>

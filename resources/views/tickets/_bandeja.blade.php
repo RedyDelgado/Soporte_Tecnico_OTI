@@ -51,7 +51,13 @@
                     @forelse ($tickets as $t)
                         <tr data-id="{{ $t->id }}" @class(['!bg-brand-50/60' => $t->created_at->gt(now()->subMinute())])>
                             <td><x-semaforo :ticket="$t" /></td>
-                            <td class="whitespace-nowrap"><a href="{{ route('tickets.show', $t) }}" class="link font-mono">{{ $t->codigo }}</a></td>
+                            <td class="whitespace-nowrap">
+                                <a href="{{ route('tickets.show', $t) }}" class="link font-mono">{{ $t->codigo }}</a>
+                                @if ($puedeAsignar)
+                                    <a href="{{ route('tickets.show', $t) }}#editar" class="ml-1 inline-grid size-7 place-items-center rounded-md text-neutral-400 hover:bg-brand-50 hover:text-brand-700"
+                                       title="Editar {{ $t->codigo }}" aria-label="Editar {{ $t->codigo }}"><i class="ti ti-pencil"></i></a>
+                                @endif
+                            </td>
                             <td class="max-w-80">
                                 <a href="{{ route('tickets.show', $t) }}" class="block truncate font-medium text-neutral-900 hover:text-brand-700">{{ $t->descripcion }}</a>
                                 <div class="mt-1 flex items-center gap-2 text-xs muted">

@@ -15,9 +15,9 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasPushSubscriptions;
+    use HasFactory, HasPushSubscriptions, Notifiable;
 
-    // "usuario" pide soporte desde el portal; el resto es personal de la OTI. Solo el administrador (jefe) cambia roles.
+    // "usuario" pide soporte desde el portal; el resto es personal de la OTI. Solo el administrador (jefe) y la mesa cambian roles.
     const ROLES = ['usuario' => 'Usuario', 'mesa' => 'Mesa de ayuda', 'tecnico' => 'Técnico / especialista', 'jefe' => 'Administrador'];
 
     // Iguales a los defaults de la tabla, para que un usuario recién creado ya los tenga en memoria.
@@ -43,9 +43,10 @@ class User extends Authenticatable
         return in_array($this->rol, ['mesa', 'jefe']);
     }
 
+    /** Privilegios de administrador. La mesa de ayuda tiene los mismos que el administrador. */
     public function esJefe(): bool
     {
-        return $this->rol === 'jefe';
+        return $this->puedeAsignar();
     }
 
     /** Ruta de inicio según el rol. */

@@ -123,7 +123,7 @@
     <x-modal id="modal-nueva-persona" titulo="Nueva persona">
         <form method="POST" action="{{ route('directorio.persona.store') }}" class="space-y-4">
             @csrf
-            <div><label class="label" for="np-nombre">Nombre completo</label><input id="np-nombre" name="nombre" class="input" required placeholder="María Quispe Huamán"></div>
+            <div><label class="label" for="np-nombre">Nombre completo</label><input id="np-nombre" name="nombre" class="input" required placeholder="Nombre Apellido"></div>
             <div><label class="label" for="np-tel">Celular</label><input id="np-tel" name="telefono" class="input" inputmode="tel" placeholder="984123456"><p class="hint">Opcional, pero evita duplicados.</p></div>
             <div>
                 <label class="label" for="np-area">Sede y área</label>

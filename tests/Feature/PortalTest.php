@@ -75,13 +75,16 @@ class PortalTest extends TestCase
         $this->assertEqualsWithDelta(4 * 3600, $t->fresh()->created_at->diffInSeconds($t->fresh()->vence_at), 5);
     }
 
-    public function test_solo_el_administrador_cambia_roles_y_ve_perfiles(): void
+    public function test_administrador_y_mesa_cambian_roles_y_ven_perfiles(): void
     {
         $jefe = User::where('rol', 'jefe')->first();
         $mesa = User::where('rol', 'mesa')->first();
+        $tecnico = User::where('rol', 'tecnico')->first();
         $u = User::create(['name' => 'Pedro', 'email' => 'pedro@uniq.edu.pe', 'password' => 'x', 'rol' => 'usuario']);
 
-        $this->actingAs($mesa)->put("/usuarios/{$u->id}", ['name' => 'Pedro', 'rol' => 'tecnico'])->assertForbidden();
+        $this->actingAs($tecnico)->put("/usuarios/{$u->id}", ['name' => 'Pedro', 'rol' => 'tecnico'])->assertForbidden();
+        $this->actingAs($mesa)->get('/usuarios')->assertOk();
+        $this->actingAs($mesa)->get('/categorias')->assertOk();
         $this->actingAs($jefe)->put("/usuarios/{$u->id}", ['name' => 'Pedro', 'rol' => 'tecnico', 'especialidad' => 'servidores', 'activo' => 1])->assertSessionHasNoErrors();
         $this->assertSame(['tecnico', 'servidores'], [$u->fresh()->rol, $u->fresh()->especialidad]);
 

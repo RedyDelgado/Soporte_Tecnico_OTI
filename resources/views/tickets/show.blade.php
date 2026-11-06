@@ -231,9 +231,9 @@
                         </div>
                     </form>
                 </x-modal>
-                @if ($errors->hasAny(['sede_id', 'area_id', 'canal', 'prioridad', 'descripcion']) || ($t->estado === 'resuelto' && $errors->hasAny(['diagnostico', 'solucion'])))
-                    <script>document.addEventListener('DOMContentLoaded', () => document.getElementById('modal-editar').showModal())</script>
-                @endif
+                @php($reabrirEdicion = $errors->hasAny(['sede_id', 'area_id', 'canal', 'prioridad', 'descripcion']) || ($t->estado === 'resuelto' && $errors->hasAny(['diagnostico', 'solucion'])))
+                {{-- El lápiz de la bandeja llega con #editar y abre el modal directo. --}}
+                <script>document.addEventListener('DOMContentLoaded', () => { if (@js($reabrirEdicion) || location.hash === '#editar') document.getElementById('modal-editar').showModal() })</script>
             @endif
             @if ($u->puedeAsignar() && in_array($t->estado, \App\Models\Ticket::ABIERTOS))
                 <form method="POST" action="{{ route('tickets.asignar', $t) }}" class="card p-4"
